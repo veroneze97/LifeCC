@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react'
+import React, { createContext, useState } from 'react'
 
 interface AuthContextType {
     user: { id: string; email: string; user_metadata: { full_name: string } } | null
@@ -6,7 +6,7 @@ interface AuthContextType {
     signOut: () => Promise<void>
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Versão Single-User: Usuário sempre fixo como "local"
@@ -28,10 +28,3 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     )
 }
 
-export const useAuth = () => {
-    const context = useContext(AuthContext)
-    if (context === undefined) {
-        throw new Error('useAuth must be used within an AuthProvider')
-    }
-    return context
-}
