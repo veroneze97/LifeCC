@@ -1,10 +1,7 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
-import { User, Session } from '@supabase/supabase-js'
-import { supabase } from '../lib/supabase'
+import React, { createContext, useContext, useState } from 'react'
 
 interface AuthContextType {
-    user: User | null
-    session: Session | null
+    user: { id: string; email: string; user_metadata: { full_name: string } } | null
     loading: boolean
     signOut: () => Promise<void>
 }
@@ -12,40 +9,20 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-    const [user, setUser] = useState<User | null>(null)
-    const [session, setSession] = useState<Session | null>(null)
-    const [loading, setLoading] = useState(true)
-
-    useEffect(() => {
-        // Check active sessions
-        supabase.auth.getSession()
-            .then(({ data: { session } }) => {
-                setSession(session)
-                setUser(session?.user ?? null)
-            })
-            .catch((err) => {
-                console.error('Auth initialization error:', err)
-            })
-            .finally(() => {
-                setLoading(false)
-            })
-
-        // Listen for changes on auth state
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            setSession(session)
-            setUser(session?.user ?? null)
-            setLoading(false)
-        })
-
-        return () => subscription.unsubscribe()
-    }, [])
+    // Versão Single-User: Usuário sempre fixo como "local"
+    const [user] = useState({
+        id: 'local',
+        email: 'user@lifecc.com',
+        user_metadata: { full_name: 'Usuário Local' }
+    })
+    const [loading] = useState(false)
 
     const signOut = async () => {
-        await supabase.auth.signOut()
+        console.log('Sign out disabled in Single-User mode')
     }
 
     return (
-        <AuthContext.Provider value={{ user, session, loading, signOut }}>
+        <AuthContext.Provider value={{ user, loading, signOut }}>
             {children}
         </AuthContext.Provider>
     )

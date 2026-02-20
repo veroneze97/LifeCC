@@ -1,21 +1,19 @@
 import { Routes, Route } from 'react-router-dom'
 import { MainLayout } from '../components/layout/MainLayout'
 import { DashboardPage } from '../pages/dashboard/DashboardPage'
-import { LoginPage } from '../pages/auth/LoginPage'
-import { RegisterPage } from '../pages/auth/RegisterPage'
+import { PortfolioPage } from '../pages/portfolio/PortfolioPage'
+import { PerformancePage } from '../pages/performance/PerformancePage'
+import { HistoryPage } from '../pages/history/HistoryPage'
 
 export function AppRoutes() {
     return (
         <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-
             <Route element={<MainLayout />}>
                 <Route path="/" element={<DashboardPage />} />
-                <Route path="/patrimonio" element={<div>Patrimônio Content</div>} />
-                <Route path="/performance" element={<div>Performance Content</div>} />
-                <Route path="/historico" element={<div>Histórico Content</div>} />
-                <Route path="/configuracoes" element={<div>Configurações Content</div>} />
+                <Route path="/patrimonio" element={<PortfolioPage />} />
+                <Route path="/performance" element={<PerformancePage />} />
+                <Route path="/historico" element={<HistoryPage />} />
+                <Route path="/configuracoes" element={<div className="p-8 text-center text-zinc-400 font-bold animate-pulse uppercase tracking-[0.2em]">Configurações em Breve</div>} />
             </Route>
         </Routes>
     )

@@ -1,9 +1,9 @@
-import { Outlet, Navigate } from 'react-router-dom'
+import { Outlet } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { useAuth } from '../../contexts/AuthContext'
 
 export function MainLayout() {
-    const { user, loading } = useAuth()
+    const { loading } = useAuth()
 
     if (loading) {
         return (
@@ -11,10 +11,6 @@ export function MainLayout() {
                 <div className="w-8 h-8 border-4 border-black border-t-transparent rounded-full animate-spin"></div>
             </div>
         )
-    }
-
-    if (!user) {
-        return <Navigate to="/login" replace />
     }
 
     return (
