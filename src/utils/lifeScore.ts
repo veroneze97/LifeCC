@@ -23,6 +23,11 @@ export function calculateLifeScore(
     let nwScore = 0
     let perfScore = 0
 
+    // Safety checks against NaN/Infinity
+    if (isNaN(investmentRate) || !isFinite(investmentRate)) investmentRate = 0
+    if (isNaN(nwGrowthPct) || !isFinite(nwGrowthPct)) nwGrowthPct = 0
+    if (isNaN(workouts) || !isFinite(workouts)) workouts = 0
+
     // 1. Finance Score (Max 60): baseado na taxa de investimento
     // Benchmark: 30% investment rate = 60 pontos
     financeScore = (investmentRate >= 30)
@@ -66,5 +71,6 @@ export function calculateLifeScore(
  * Helper para converter contagem de treinos em pontos (0-15)
  */
 function calculatePerformanceFromCount(count: number): number {
+    if (!count || count <= 0) return 0
     return (count >= 12) ? 15 : (count >= 8) ? 10 : (count >= 4) ? 5 : (count * 1.25)
 }

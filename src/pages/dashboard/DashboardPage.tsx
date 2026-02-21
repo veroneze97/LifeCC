@@ -28,7 +28,7 @@ export function DashboardPage() {
                     <div className="w-12 h-12 border-[3px] border-border rounded-full animate-spin border-t-brand" />
                     <Zap className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-brand animate-pulse" size={16} />
                 </div>
-                <p className="text-muted font-semibold uppercase tracking-widest text-[10px]">Gerando Relatório Alpha...</p>
+                <p className="text-muted font-semibold uppercase tracking-widest text-[10px]">Preparando seu Dashboard...</p>
             </div>
         )
     }
@@ -39,8 +39,10 @@ export function DashboardPage() {
                 <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-6">
                     <AlertCircle size={32} />
                 </div>
-                <h2 className="text-xl font-bold text-foreground mb-2">Ops! Algo deu errado.</h2>
-                <p className="text-muted text-sm max-w-sm mb-8">{error}</p>
+                <h2 className="text-xl font-bold text-foreground mb-2">Não foi possível carregar seu Dashboard</h2>
+                <p className="text-muted text-sm max-w-sm mb-8">
+                    {error || 'Houve um problema ao conectar com nossos serviços. Por favor, verifique sua conexão ou tente novamente.'}
+                </p>
                 <button
                     onClick={() => refresh()}
                     className="px-8 py-3 bg-zinc-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-zinc-800 transition-all shadow-xl shadow-zinc-950/20 active:scale-95"
@@ -61,7 +63,7 @@ export function DashboardPage() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-foreground tracking-tight">
-                        {selectedProfileId === 'all' ? 'Visão Consolidada' : `Dashboard de ${activeProfile?.name}`}
+                        {selectedProfileId === 'all' ? 'Visão Consolidada' : `Dashboard de ${activeProfile?.name || 'Perfil'}`}
                     </h1>
                     <p className="text-muted text-sm font-medium mt-1">Sua inteligência financeira {selectedProfileId === 'all' ? 'do casal' : 'individual'} em tempo real.</p>
                 </div>
@@ -150,11 +152,11 @@ export function DashboardPage() {
                 {/* KPI: Balanço Mensal */}
                 <div className="premium-card p-6 group">
                     <p className="text-muted font-semibold text-[11px] uppercase tracking-wider mb-2">Balanço Mensal</p>
-                    <h3 className={cn("text-3xl font-bold tracking-tight mb-2", kpis.balance >= 0 ? "text-positive" : "text-negative")}>
-                        {formatCurrency(kpis.balance)}
+                    <h3 className={cn("text-3xl font-bold tracking-tight mb-2", (kpis.balance ?? 0) >= 0 ? "text-positive" : "text-negative")}>
+                        {formatCurrency(kpis.balance ?? 0)}
                     </h3>
                     <div className="flex items-center gap-1.5">
-                        {kpis.balance >= 0 ? <ArrowUpRight size={14} className="text-positive" /> : <ArrowDownRight size={14} className="text-negative" />}
+                        {(kpis.balance ?? 0) >= 0 ? <ArrowUpRight size={14} className="text-positive" /> : <ArrowDownRight size={14} className="text-negative" />}
                         <span className="text-xs font-medium text-muted">Resultado do Fluxo</span>
                     </div>
                 </div>
@@ -371,9 +373,9 @@ export function DashboardPage() {
                             <p className="text-muted text-sm leading-relaxed mb-6">
                                 Seu fluxo de caixa está <span className="text-positive font-medium">12% mais eficiente</span> que no mês passado. Considere aumentar seu aporte em renda variável em 5%.
                             </p>
-                            <button className="w-full py-2.5 bg-brand text-white rounded-lg text-xs font-semibold hover:bg-brand/90 transition-all active:scale-95 shadow-sm">
+                            <Link to="/report" className="block w-full text-center py-2.5 bg-brand text-white rounded-lg text-xs font-semibold hover:bg-brand/90 transition-all active:scale-95 shadow-sm">
                                 Ver Relatório Detalhado
-                            </button>
+                            </Link>
                         </div>
                     </div>
                 </div>

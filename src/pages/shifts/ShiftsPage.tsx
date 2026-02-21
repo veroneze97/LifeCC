@@ -30,6 +30,8 @@ export function ShiftsPage() {
 
     useEffect(() => {
         fetchData()
+        window.addEventListener('lifecc-data-changed', fetchData)
+        return () => window.removeEventListener('lifecc-data-changed', fetchData)
     }, [fetchData])
 
     const filteredShifts = shifts.filter(s => filterStatus === 'all' || s.status === filterStatus)

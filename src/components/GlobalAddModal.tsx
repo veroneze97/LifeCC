@@ -5,7 +5,7 @@ import { Modal } from './Modal'
 import { TransactionForm } from './TransactionForm'
 import { AssetLiabilityForm } from './AssetLiabilityForm'
 import { ShiftForm } from './ShiftForm'
-import { cn } from '../utils/utils'
+
 
 type Section = 'choice' | 'transaction' | 'shift' | 'asset' | 'liability'
 
@@ -21,7 +21,6 @@ export function GlobalAddModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
 
     const handleSuccess = () => {
         onClose()
-        window.location.reload()
     }
 
     const renderChoice = () => (
@@ -85,33 +84,11 @@ export function GlobalAddModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
                 <ShiftForm onSuccess={handleSuccess} onCancel={() => setSection('choice')} />
             )}
             {(section === 'asset' || section === 'liability') && (
-                <div className="space-y-6">
-                    <div className="flex bg-zinc-100 p-1 rounded-2xl">
-                        <button
-                            onClick={() => setSection('asset')}
-                            className={cn(
-                                "flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all",
-                                section === 'asset' ? "bg-white text-zinc-950 shadow-sm" : "text-zinc-400 hover:text-zinc-600"
-                            )}
-                        >
-                            Ativo
-                        </button>
-                        <button
-                            onClick={() => setSection('liability')}
-                            className={cn(
-                                "flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all",
-                                section === 'liability' ? "bg-white text-zinc-950 shadow-sm" : "text-zinc-400 hover:text-zinc-600"
-                            )}
-                        >
-                            Passivo
-                        </button>
-                    </div>
-                    <AssetLiabilityForm
-                        type={section as 'asset' | 'liability'}
-                        onSuccess={handleSuccess}
-                        onCancel={() => setSection('choice')}
-                    />
-                </div>
+                <AssetLiabilityForm
+                    type={section as 'asset' | 'liability'}
+                    onSuccess={handleSuccess}
+                    onCancel={() => setSection('choice')}
+                />
             )}
         </Modal>
     )

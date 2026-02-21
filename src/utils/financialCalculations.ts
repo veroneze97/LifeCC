@@ -69,7 +69,7 @@ export function calculateProfileParticipation(
     liabilities: any[],
     totalNetWorth: number
 ): ProfileParticipation[] {
-    if (totalNetWorth === 0) return profiles.map(p => ({ name: p.name, value: 0, percentage: 0 }))
+    if (!totalNetWorth || totalNetWorth === 0) return profiles.map(p => ({ name: p.name, value: 0, percentage: 0 }))
 
     return profiles.map(p => {
         const pAssets = assets.filter(a => a.profile_id === p.id).reduce((acc, item) => acc + Number(item.value || 0), 0)

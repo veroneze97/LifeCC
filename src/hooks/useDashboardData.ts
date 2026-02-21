@@ -41,6 +41,14 @@ export function useDashboardData() {
     }, [])
 
     useEffect(() => {
+        const handleDataChange = () => refresh()
+        window.addEventListener('lifecc-data-changed', handleDataChange)
+        return () => window.removeEventListener('lifecc-data-changed', handleDataChange)
+    }, [refresh])
+
+    useEffect(() => {
+        let isMounted = true
+
         async function fetchData() {
             try {
                 setLoading(true)
@@ -75,32 +83,51 @@ export function useDashboardData() {
                         .gte('date', historyStart.toISOString()).lte('date', end.toISOString()),
                     applyFilter(supabase.from('goals').select('*').eq('user_id', userId))
                         .eq('scope', selectedProfileId === 'all' ? 'joint' : 'individual')
-                        .maybeSingle()
+                        .order('created_at', { ascending: false })
+                        .limit(1)
                 ])
 
                 if (assetsRes.error) throw assetsRes.error
                 if (liabilitiesRes.error) throw liabilitiesRes.error
+                if (transactionsRes.error) throw transactionsRes.error
+                if (shiftsRes.error) throw shiftsRes.error
+                if (healthRes.error) throw healthRes.error
 
-                setRawData({
-                    assets: assetsRes.data || [],
-                    liabilities: liabilitiesRes.data || [],
-                    transactions: transactionsRes.data || [],
-                    shifts: shiftsRes.data || [],
-                    health: healthRes.data || [],
-                    histAssets: histAssetsRes.data || [],
-                    histLiabilities: histLiabilitiesRes.data || [],
-                    histTransactions: histTransactionsRes.data || [],
-                    goals: goalsRes.data ? [goalsRes.data as Goal] : []
-                })
+                if (histAssetsRes.error) throw histAssetsRes.error
+                if (histLiabilitiesRes.error) throw histLiabilitiesRes.error
+                if (histTransactionsRes.error) throw histTransactionsRes.error
+                if (goalsRes.error) throw goalsRes.error
+
+                if (isMounted) {
+                    setRawData({
+                        assets: assetsRes.data || [],
+                        liabilities: liabilitiesRes.data || [],
+                        transactions: transactionsRes.data || [],
+                        shifts: shiftsRes.data || [],
+                        health: healthRes.data || [],
+                        histAssets: histAssetsRes.data || [],
+                        histLiabilities: histLiabilitiesRes.data || [],
+                        histTransactions: histTransactionsRes.data || [],
+                        goals: (goalsRes.data as any[]) || []
+                    })
+                }
             } catch (err: any) {
                 console.error('Error fetching dashboard data:', err)
-                setError(err.message || 'Erro ao carregar dados do painel')
+                if (isMounted) {
+                    setError(err.message || 'Não foi possível carregar os dados do painel. Verifique sua conexão.')
+                }
             } finally {
-                setLoading(false)
+                if (isMounted) {
+                    setLoading(false)
+                }
             }
         }
 
         fetchData()
+
+        return () => {
+            isMounted = false
+        }
     }, [monthDate, selectedProfileId, refreshCounter])
 
     const data = useMemo<DashboardData | null>(() => {
@@ -124,35 +151,22 @@ export function useDashboardData() {
         const history: HistoricalPoint[] = []
         for (let i = 5; i >= 0; i--) {
             const date = subMonths(monthDate, i)
-            const mStart = startOfMonth(date)
-            const mEnd = endOfMonth(date)
+            const monthPrefix = format(date, 'yyyy-MM')
 
             const mAssets = histAssets
-                .filter(a => {
-                    const ad = new Date(a.date_reference!)
-                    return ad >= mStart && ad <= mEnd
-                })
+                .filter(a => a.date_reference?.startsWith(monthPrefix))
                 .reduce((acc, a) => acc + Number(a.value || 0), 0)
 
             const mLiabs = histLiabilities
-                .filter(l => {
-                    const ld = new Date(l.date_reference!)
-                    return ld >= mStart && ld <= mEnd
-                })
+                .filter(l => l.date_reference?.startsWith(monthPrefix))
                 .reduce((acc, l) => acc + Number(l.value || 0), 0)
 
             const mIncomes = histTransactions
-                .filter(t => {
-                    const td = new Date(t.date!)
-                    return t.type === 'income' && td >= mStart && td <= mEnd
-                })
+                .filter(t => t.type === 'income' && t.date?.startsWith(monthPrefix))
                 .reduce((acc, t) => acc + Number(t.amount || 0), 0)
 
             const mExpenses = histTransactions
-                .filter(t => {
-                    const td = new Date(t.date!)
-                    return t.type === 'expense' && td >= mStart && td <= mEnd
-                })
+                .filter(t => t.type === 'expense' && t.date?.startsWith(monthPrefix))
                 .reduce((acc, t) => acc + Number(t.amount || 0), 0)
 
             history.push({

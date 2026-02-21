@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { Loader2, ArrowLeft, User, AlertCircle } from 'lucide-react'
+import { format } from 'date-fns'
 
 import { supabase } from '../services/supabase'
 import { useFilter } from '../hooks/useFilter'
+import { cn } from '../utils/utils'
 
 interface AssetLiabilityFormProps {
     type: 'asset' | 'liability'
@@ -30,8 +32,9 @@ export function AssetLiabilityForm({ type, initialData, onSuccess, onCancel }: A
     const { profiles, selectedProfileId } = useFilter()
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
-    const options = type === 'asset' ? assetTypes : liabilityTypes
-    const tableName = type === 'asset' ? 'assets' : 'liabilities'
+    const [currentType, setCurrentType] = useState<'asset' | 'liability'>(type)
+    const options = currentType === 'asset' ? assetTypes : liabilityTypes
+    const tableName = currentType === 'asset' ? 'assets' : 'liabilities'
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
@@ -75,15 +78,41 @@ export function AssetLiabilityForm({ type, initialData, onSuccess, onCancel }: A
             }
 
             if (submissionError) throw submissionError
+            window.dispatchEvent(new CustomEvent('lifecc-data-changed'))
             onSuccess()
         } catch (err: any) {
-            setError(err.message || `Erro ao salvar ${type === 'asset' ? 'ativo' : 'passivo'}. Tente novamente.`)
+            setError(err.message || `Erro ao salvar ${currentType === 'asset' ? 'ativo' : 'passivo'}. Tente novamente.`)
             setLoading(false)
         }
     }
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6 text-zinc-950">
+            {!initialData && (
+                <div className="flex bg-zinc-100 p-1 rounded-2xl">
+                    <button
+                        type="button"
+                        onClick={() => setCurrentType('asset')}
+                        className={cn(
+                            "flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all",
+                            currentType === 'asset' ? "bg-white text-zinc-950 shadow-sm" : "text-zinc-400 hover:text-zinc-600"
+                        )}
+                    >
+                        Ativo
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setCurrentType('liability')}
+                        className={cn(
+                            "flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all",
+                            currentType === 'liability' ? "bg-white text-zinc-950 shadow-sm" : "text-zinc-400 hover:text-zinc-600"
+                        )}
+                    >
+                        Passivo
+                    </button>
+                </div>
+            )}
+
             {error && (
                 <div className="p-4 bg-red-50 border border-red-100 rounded-2xl flex gap-3 text-red-600 text-sm animate-in fade-in slide-in-from-top-2">
                     <AlertCircle size={18} className="shrink-0" />
@@ -118,7 +147,7 @@ export function AssetLiabilityForm({ type, initialData, onSuccess, onCancel }: A
                 </div>
 
                 <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-1">Tipo de {type === 'asset' ? 'Ativo' : 'Passivo'}</label>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-1">Tipo de {currentType === 'asset' ? 'Ativo' : 'Passivo'}</label>
                     <select
                         required
                         name="type"
@@ -137,7 +166,7 @@ export function AssetLiabilityForm({ type, initialData, onSuccess, onCancel }: A
                         required
                         name="date_reference"
                         type="date"
-                        defaultValue={initialData?.date_reference || new Date().toISOString().split('T')[0]}
+                        defaultValue={initialData?.date_reference || format(new Date(), 'yyyy-MM-dd')}
                         className="w-full p-4 bg-zinc-50 border border-zinc-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-zinc-950/5 transition-all"
                     />
                 </div>

@@ -6,7 +6,8 @@ import {
     Settings,
     TrendingUp as Activity,
     Calculator,
-    ShieldCheck
+    ShieldCheck,
+    FileText
 } from 'lucide-react'
 import { cn } from '../utils/utils'
 
@@ -16,6 +17,7 @@ const menuItems = [
     { icon: Calculator, label: 'Plantões', path: '/shifts' },
     { icon: Wallet, label: 'Patrimônio', path: '/networth' },
     { icon: Activity, label: 'Performance', path: '/performance' },
+    { icon: FileText, label: 'Relatórios', path: '/report' },
 ]
 
 interface SidebarProps {

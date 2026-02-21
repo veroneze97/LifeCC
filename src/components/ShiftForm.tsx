@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Loader2, ArrowLeft, AlertCircle } from 'lucide-react'
+import { format } from 'date-fns'
 
 import { supabase } from '../services/supabase'
 import { useFilter } from '../hooks/useFilter'
@@ -46,6 +47,7 @@ export function ShiftForm({ onSuccess, onCancel }: ShiftFormProps) {
 
             const { error: submissionError } = await supabase.from('shifts').insert(payload)
             if (submissionError) throw submissionError
+            window.dispatchEvent(new CustomEvent('lifecc-data-changed'))
             onSuccess()
         } catch (err: any) {
             setError(err.message || 'Erro ao salvar plantão. Tente novamente.')
@@ -65,7 +67,7 @@ export function ShiftForm({ onSuccess, onCancel }: ShiftFormProps) {
             <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest pl-1">Data</label>
-                    <input name="date" type="date" required defaultValue={new Date().toISOString().split('T')[0]} className="w-full bg-zinc-50 border border-zinc-200 rounded-2xl px-4 py-3 text-sm focus:ring-4 focus:ring-black/5 outline-none transition-all" />
+                    <input name="date" type="date" required defaultValue={format(new Date(), 'yyyy-MM-dd')} className="w-full bg-zinc-50 border border-zinc-200 rounded-2xl px-4 py-3 text-sm focus:ring-4 focus:ring-black/5 outline-none transition-all" />
                 </div>
                 <div className="space-y-2">
                     <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest pl-1">Perfil</label>

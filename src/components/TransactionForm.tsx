@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Loader2, ArrowLeft, AlertCircle } from 'lucide-react'
+import { format } from 'date-fns'
 
 import { supabase } from '../services/supabase'
 import { useFilter } from '../hooks/useFilter'
@@ -18,6 +19,8 @@ export function TransactionForm({ initialData, onSuccess, onCancel }: Transactio
     const [accounts, setAccounts] = useState<{ id: string; name: string }[]>([])
 
     useEffect(() => {
+        let isMounted = true
+
         async function fetchAccounts() {
             try {
                 let query = supabase.from('accounts').select('id, name').eq('user_id', 'local')
@@ -26,12 +29,16 @@ export function TransactionForm({ initialData, onSuccess, onCancel }: Transactio
                 }
                 const { data, error: err } = await query.order('name')
                 if (err) throw err
-                if (data) setAccounts(data)
+                if (isMounted && data) setAccounts(data)
             } catch (err) {
                 console.error('Error fetching accounts:', err)
             }
         }
         fetchAccounts()
+
+        return () => {
+            isMounted = false
+        }
     }, [selectedProfileId])
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -74,6 +81,7 @@ export function TransactionForm({ initialData, onSuccess, onCancel }: Transactio
             }
 
             if (submissionError) throw submissionError
+            window.dispatchEvent(new CustomEvent('lifecc-data-changed'))
             onSuccess()
         } catch (err: any) {
             setError(err.message || 'Erro ao salvar transação. Verifique os dados e tente novamente.')
@@ -106,7 +114,7 @@ export function TransactionForm({ initialData, onSuccess, onCancel }: Transactio
                 </div>
                 <div className="space-y-2 col-span-2">
                     <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest pl-1">Data</label>
-                    <input name="date" type="date" required defaultValue={initialData?.date || new Date().toISOString().split('T')[0]} className="w-full bg-zinc-50 border border-zinc-200 rounded-2xl px-4 py-3 text-sm focus:ring-4 focus:ring-black/5 outline-none transition-all" />
+                    <input name="date" type="date" required defaultValue={initialData?.date || format(new Date(), 'yyyy-MM-dd')} className="w-full bg-zinc-50 border border-zinc-200 rounded-2xl px-4 py-3 text-sm focus:ring-4 focus:ring-black/5 outline-none transition-all" />
                 </div>
             </div>
 

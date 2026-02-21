@@ -29,6 +29,6 @@ export function calculateMonthsToGoal(
  * Calcula a porcentagem de crescimento patrimonial entre dois períodos
  */
 export function calculateNWGrowth(currentNW: number, previousNW: number): number {
-    if (previousNW <= 0) return (previousNW === 0 && currentNW > 0) ? 10 : 0
+    if (!previousNW || previousNW <= 0) return (previousNW === 0 && currentNW > 0) ? 10 : 0
     return ((currentNW - previousNW) / previousNW) * 100
 }

@@ -84,6 +84,12 @@ export function NetWorthPage() {
     useEffect(() => {
         fetchData()
         fetchHistory()
+        window.addEventListener('lifecc-data-changed', fetchData)
+        window.addEventListener('lifecc-data-changed', fetchHistory)
+        return () => {
+            window.removeEventListener('lifecc-data-changed', fetchData)
+            window.removeEventListener('lifecc-data-changed', fetchHistory)
+        }
     }, [fetchData, fetchHistory])
 
     const totalAssets = assets.reduce((sum, item) => sum + Number(item.value), 0)

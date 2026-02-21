@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Loader2, ArrowLeft, Dumbbell, Scale, User, AlertCircle } from 'lucide-react'
+import { format } from 'date-fns'
 
 import { supabase } from '../services/supabase'
 import { useFilter } from '../hooks/useFilter'
@@ -98,7 +99,7 @@ export function HealthMetricsForm({ initialData, onSuccess, onCancel }: HealthMe
                             required
                             name="date"
                             type="date"
-                            defaultValue={initialData?.date || new Date().toISOString().split('T')[0]}
+                            defaultValue={initialData?.date || format(new Date(), 'yyyy-MM-dd')}
                             className="w-full p-4 bg-zinc-50 border border-zinc-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-zinc-950/5 transition-all"
                         />
                     </div>
