@@ -45,7 +45,7 @@ export function DashboardPage() {
                 </p>
                 <button
                     onClick={() => refresh()}
-                    className="px-8 py-3 bg-zinc-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-zinc-800 transition-all shadow-xl shadow-zinc-950/20 active:scale-95"
+                    className="px-8 py-3 bg-brand text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-brand/90 transition-all shadow-xl shadow-brand/20 active:scale-95"
                 >
                     Tentar Novamente
                 </button>
@@ -70,7 +70,7 @@ export function DashboardPage() {
                 <div className="flex gap-3">
                     <Link
                         to="/report"
-                        className="px-5 py-2 bg-foreground text-background rounded-lg text-xs font-semibold flex items-center gap-2 hover:bg-muted transition-all shadow-sm active:scale-95"
+                        className="px-5 py-2 bg-brand text-white rounded-lg text-xs font-semibold flex items-center gap-2 hover:bg-brand/90 transition-all shadow-sm active:scale-95"
                     >
                         <FileText size={14} /> Relatório Executivo
                     </Link>

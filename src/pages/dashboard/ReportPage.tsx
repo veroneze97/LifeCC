@@ -35,7 +35,7 @@ export function ReportPage() {
                 <p className="text-zinc-500 text-sm max-w-sm mb-6">{error || 'Dados não disponíveis.'}</p>
                 <button
                     onClick={() => window.history.back()}
-                    className="px-6 py-2 bg-zinc-900 text-white rounded-lg text-xs font-semibold"
+                    className="px-6 py-2 bg-brand text-white rounded-lg text-xs font-semibold"
                 >
                     Voltar
                 </button>
@@ -175,7 +175,7 @@ export function ReportPage() {
             <div className="fixed bottom-8 right-8 no-print">
                 <button
                     onClick={() => window.history.back()}
-                    className="px-5 py-2.5 bg-zinc-900 text-white rounded-lg text-xs font-semibold shadow-xl hover:bg-zinc-800 transition-all active:scale-95"
+                    className="px-5 py-2.5 bg-brand text-white rounded-lg text-xs font-semibold shadow-xl hover:bg-brand/90 transition-all active:scale-95"
                 >
                     Voltar ao Dashboard
                 </button>

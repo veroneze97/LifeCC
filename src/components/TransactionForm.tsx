@@ -158,7 +158,7 @@ export function TransactionForm({ initialData, onSuccess, onCancel }: Transactio
                         <ArrowLeft size={20} />
                     </button>
                 )}
-                <button disabled={loading} type="submit" className="flex-1 bg-zinc-950 text-white font-bold rounded-2xl py-4 hover:bg-zinc-800 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+                <button disabled={loading} type="submit" className="flex-1 bg-brand text-white font-bold rounded-2xl py-4 hover:bg-brand/90 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
                     {loading ? <Loader2 className="animate-spin" size={20} /> : (initialData?.id ? 'Atualizar Lançamento' : 'Salvar Lançamento')}
                 </button>
             </div>

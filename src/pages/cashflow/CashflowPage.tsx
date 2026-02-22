@@ -93,7 +93,7 @@ export function CashflowPage() {
                         setEditingTransaction(null)
                         setIsModalOpen(true)
                     }}
-                    className="h-12 px-8 bg-zinc-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-zinc-800 transition-all flex items-center gap-3 shadow-xl shadow-zinc-950/20 active:scale-95 whitespace-nowrap"
+                    className="h-12 px-8 bg-brand text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-brand/90 transition-all flex items-center gap-3 shadow-xl shadow-brand/20 active:scale-95 whitespace-nowrap"
                 >
                     <Plus size={18} strokeWidth={3} /> Lançamento
                 </button>
@@ -226,7 +226,7 @@ export function CashflowPage() {
                                     </div>
 
                                     <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all scale-95 group-hover:scale-100">
-                                        <button onClick={() => duplicateTransaction(t)} className="p-3 bg-zinc-50 hover:bg-zinc-950 hover:text-white rounded-xl transition-all text-zinc-400">
+                                        <button onClick={() => duplicateTransaction(t)} className="p-3 bg-zinc-50 hover:bg-zinc-200 hover:text-white rounded-xl transition-all text-zinc-400">
                                             <Copy size={16} />
                                         </button>
                                         <button
@@ -234,7 +234,7 @@ export function CashflowPage() {
                                                 setEditingTransaction(t)
                                                 setIsModalOpen(true)
                                             }}
-                                            className="p-3 bg-zinc-50 hover:bg-zinc-950 hover:text-white rounded-xl transition-all text-zinc-400"
+                                            className="p-3 bg-zinc-50 hover:bg-zinc-200 hover:text-white rounded-xl transition-all text-zinc-400"
                                         >
                                             <Edit2 size={16} />
                                         </button>

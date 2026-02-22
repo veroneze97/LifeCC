@@ -173,7 +173,7 @@ export function ShiftsPage() {
                                         {shift.status === 'pending' && (
                                             <button
                                                 onClick={() => handleMarkAsPaid(shift)}
-                                                className="px-6 py-3 bg-zinc-950 text-white rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-zinc-800 transition-all active:scale-95 shadow-lg shadow-zinc-950/20"
+                                                className="px-6 py-3 bg-brand text-white rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-brand/90 transition-all active:scale-95 shadow-lg shadow-brand/20"
                                             >
                                                 Confirmar Recebimento
                                             </button>

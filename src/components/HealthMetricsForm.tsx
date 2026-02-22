@@ -176,7 +176,7 @@ export function HealthMetricsForm({ initialData, onSuccess, onCancel }: HealthMe
                 <button
                     disabled={loading}
                     type="submit"
-                    className="flex-1 bg-zinc-950 text-white font-bold rounded-2xl py-4 hover:bg-zinc-800 transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-xl shadow-zinc-950/20"
+                    className="flex-1 bg-brand text-white font-bold rounded-2xl py-4 hover:bg-brand/90 transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-xl shadow-brand/20"
                 >
                     {loading ? <Loader2 className="animate-spin" size={20} /> : (initialData?.id ? 'Atualizar Registro' : 'Salvar Registro')}
                 </button>

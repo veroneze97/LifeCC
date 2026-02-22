@@ -115,7 +115,7 @@ export function ShiftForm({ onSuccess, onCancel }: ShiftFormProps) {
                 <button type="button" onClick={onCancel} className="p-4 bg-zinc-100 rounded-2xl text-zinc-600 hover:bg-zinc-200 transition-all">
                     <ArrowLeft size={20} />
                 </button>
-                <button disabled={loading} type="submit" className="flex-1 bg-zinc-950 text-white font-bold rounded-2xl py-4 hover:bg-zinc-800 transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-xl shadow-zinc-950/20">
+                <button disabled={loading} type="submit" className="flex-1 bg-brand text-white font-bold rounded-2xl py-4 hover:bg-brand/90 transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-xl shadow-brand/20">
                     {loading ? <Loader2 className="animate-spin" size={20} /> : 'Salvar Plantão'}
                 </button>
             </div>

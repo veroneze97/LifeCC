@@ -28,7 +28,7 @@ interface SidebarProps {
 export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
     return (
         <aside className={cn(
-            "fixed left-0 top-0 h-screen transition-all duration-500 z-50 flex flex-col pt-8 pb-6 px-4 bg-[#111318] border-r border-border",
+            "fixed left-0 top-0 h-screen transition-all duration-500 z-50 flex flex-col pt-8 pb-6 px-4 bg-card border-r border-border",
             isCollapsed ? "w-20" : "w-[260px]"
         )}>
             {/* Brand */}
@@ -51,7 +51,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                 <button
                     onClick={() => setIsCollapsed(!isCollapsed)}
                     className={cn(
-                        "absolute -right-7 top-1/2 -translate-y-1/2 w-6 h-10 bg-[#111318] border border-border rounded-r-lg flex items-center justify-center text-muted hover:text-brand transition-all hover:bg-card z-50",
+                        "absolute -right-7 top-1/2 -translate-y-1/2 w-6 h-10 bg-card border border-border rounded-r-lg flex items-center justify-center text-muted hover:text-brand transition-all hover:bg-card z-50",
                         isCollapsed ? "opacity-0 group-hover:opacity-100" : "opacity-100"
                     )}
                 >

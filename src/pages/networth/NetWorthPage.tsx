@@ -143,7 +143,7 @@ export function NetWorthPage() {
                     </button>
                     <button
                         onClick={() => { setModalType('asset'); setEditingItem(null); setIsModalOpen(true); }}
-                        className="px-6 py-3 bg-zinc-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-zinc-800 transition-all active:scale-95 flex items-center gap-2 shadow-xl shadow-zinc-950/20"
+                        className="px-6 py-3 bg-brand text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-brand/90 transition-all active:scale-95 flex items-center gap-2 shadow-xl shadow-brand/20"
                     >
                         <Plus size={16} /> Ativo
                     </button>
@@ -199,11 +199,11 @@ export function NetWorthPage() {
                                             <div
                                                 className={cn(
                                                     "w-full rounded-t-2xl transition-all duration-700 shadow-lg",
-                                                    h.value >= 0 ? "bg-zinc-950 group-hover:bg-zinc-800" : "bg-rose-500 group-hover:bg-rose-600"
+                                                    h.value >= 0 ? "bg-brand group-hover:bg-brand/90" : "bg-rose-500 group-hover:bg-rose-600"
                                                 )}
                                                 style={{ height: `${height}%` }}
                                             >
-                                                <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-zinc-950 text-white text-[9px] font-black px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 scale-90 group-hover:scale-100 whitespace-nowrap z-20">
+                                                <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-brand text-white text-[9px] font-black px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 scale-90 group-hover:scale-100 whitespace-nowrap z-20">
                                                     {formatCurrency(h.value)}
                                                 </div>
                                             </div>
@@ -241,7 +241,7 @@ export function NetWorthPage() {
                                             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all scale-95 group-hover:scale-100">
                                                 <button
                                                     onClick={() => { setModalType('asset'); setEditingItem(item); setIsModalOpen(true); }}
-                                                    className="p-2.5 bg-zinc-50 hover:bg-zinc-950 hover:text-white rounded-xl transition-all text-zinc-400"
+                                                    className="p-2.5 bg-zinc-50 hover:bg-zinc-200 hover:text-white rounded-xl transition-all text-zinc-400"
                                                 >
                                                     <Edit2 size={14} />
                                                 </button>
@@ -287,7 +287,7 @@ export function NetWorthPage() {
                                             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all scale-95 group-hover:scale-100">
                                                 <button
                                                     onClick={() => { setModalType('liability'); setEditingItem(item); setIsModalOpen(true); }}
-                                                    className="p-2.5 bg-zinc-50 hover:bg-zinc-950 hover:text-white rounded-xl transition-all text-zinc-400"
+                                                    className="p-2.5 bg-zinc-50 hover:bg-zinc-200 hover:text-white rounded-xl transition-all text-zinc-400"
                                                 >
                                                     <Edit2 size={14} />
                                                 </button>
@@ -339,7 +339,7 @@ export function NetWorthPage() {
                                                 </div>
                                                 <div className="w-full bg-zinc-50 h-1.5 rounded-full overflow-hidden border border-zinc-100">
                                                     <div
-                                                        className="bg-zinc-950 h-full transition-all duration-1000"
+                                                        className="bg-brand h-full transition-all duration-1000"
                                                         style={{ width: `${progress}%` }}
                                                     />
                                                 </div>

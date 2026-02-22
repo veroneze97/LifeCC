@@ -61,7 +61,7 @@ export function SettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                 <div className="premium-card p-10 space-y-8">
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-zinc-900 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-zinc-900/20">
+                        <div className="w-12 h-12 bg-brand text-white rounded-2xl flex items-center justify-center shadow-lg shadow-zinc-900/20">
                             <Save size={20} />
                         </div>
                         <div>

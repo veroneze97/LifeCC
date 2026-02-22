@@ -69,7 +69,7 @@ export function PerformancePage() {
                 </div>
                 <button
                     onClick={() => { setEditingItem(null); setIsModalOpen(true); }}
-                    className="h-12 px-8 bg-zinc-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-zinc-800 transition-all flex items-center gap-3 shadow-xl shadow-zinc-950/20 active:scale-95 whitespace-nowrap"
+                    className="h-12 px-8 bg-brand text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-brand/90 transition-all flex items-center gap-3 shadow-xl shadow-brand/20 active:scale-95 whitespace-nowrap"
                 >
                     <Plus size={18} strokeWidth={3} /> Novo Registro
                 </button>
@@ -103,7 +103,7 @@ export function PerformancePage() {
                                 <Activity size={16} className="text-zinc-950" />
                             </div>
                             <div className="w-full bg-zinc-100 h-2 rounded-full overflow-hidden">
-                                <div className="bg-zinc-950 h-full transition-all duration-1000 shadow-sm shadow-zinc-400" style={{ width: `${consistency}%` }} />
+                                <div className="bg-brand h-full transition-all duration-1000 shadow-sm shadow-brand/30" style={{ width: `${consistency}%` }} />
                             </div>
                         </div>
 
@@ -133,7 +133,7 @@ export function PerformancePage() {
                                 <p className="text-zinc-400 font-black text-[10px] uppercase tracking-[0.2em]">Evolução de Peso (Mensal)</p>
                                 <div className="flex items-center gap-6">
                                     <div className="flex items-center gap-2">
-                                        <div className="w-2 h-2 rounded-full bg-zinc-950 shadow-[0_0_8px_rgba(0,0,0,0.2)]" />
+                                        <div className="w-2 h-2 rounded-full bg-brand shadow-[0_0_8px_rgba(59,130,246,0.35)]" />
                                         <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Média: {(metrics.reduce((s, m) => s + (m.weight || 0), 0) / (metrics.filter(m => m.weight).length || 1)).toFixed(1)}kg</span>
                                     </div>
                                 </div>
@@ -152,13 +152,13 @@ export function PerformancePage() {
                                             <div
                                                 className={cn(
                                                     "w-full rounded-full transition-all duration-700",
-                                                    entry?.weight ? "bg-zinc-950 shadow-lg" : "bg-zinc-100/50",
+                                                    entry?.weight ? "bg-brand shadow-lg shadow-brand/25" : "bg-zinc-100/50",
                                                     isSameDay(new Date(monthDate.getUTCFullYear(), monthDate.getUTCMonth(), day), new Date()) && "ring-2 ring-zinc-950 ring-offset-4 ring-offset-zinc-50"
                                                 )}
                                                 style={{ height: entry?.weight ? `${Math.max(height, 8)}%` : '6px' }}
                                             >
                                                 {entry?.weight && (
-                                                    <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-zinc-950 text-white text-[9px] font-black px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 scale-75 group-hover:scale-100 whitespace-nowrap z-20">
+                                                    <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-brand text-white text-[9px] font-black px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 scale-75 group-hover:scale-100 whitespace-nowrap z-20">
                                                         {entry.weight}kg
                                                     </div>
                                                 )}
@@ -202,7 +202,7 @@ export function PerformancePage() {
                                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all scale-95 group-hover:scale-100">
                                             <button
                                                 onClick={() => { setEditingItem(item); setIsModalOpen(true); }}
-                                                className="p-2.5 bg-zinc-50 hover:bg-zinc-950 hover:text-white rounded-xl transition-all text-zinc-400"
+                                                className="p-2.5 bg-zinc-50 hover:bg-zinc-200 hover:text-white rounded-xl transition-all text-zinc-400"
                                             >
                                                 <Edit2 size={14} />
                                             </button>

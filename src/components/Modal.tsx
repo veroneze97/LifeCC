@@ -20,7 +20,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="fixed inset-0 bg-zinc-950/60 backdrop-blur-md"
+                        className="fixed inset-0 bg-zinc-400/35 backdrop-blur-md"
                     />
 
                     {/* Content Glassmorphism Influence */}

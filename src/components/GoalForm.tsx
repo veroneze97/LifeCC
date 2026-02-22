@@ -130,7 +130,7 @@ export function GoalForm({ initialData, onSuccess, onCancel }: GoalFormProps) {
                             className={cn(
                                 "py-3 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all",
                                 formData.scope === 'individual'
-                                    ? "bg-zinc-950 text-white border-zinc-950 shadow-lg shadow-zinc-950/20"
+                                    ? "bg-brand text-white border-zinc-950 shadow-lg shadow-brand/20"
                                     : "bg-white text-zinc-400 border-zinc-100 hover:border-zinc-200"
                             )}
                         >
@@ -142,7 +142,7 @@ export function GoalForm({ initialData, onSuccess, onCancel }: GoalFormProps) {
                             className={cn(
                                 "py-3 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all",
                                 formData.scope === 'joint'
-                                    ? "bg-zinc-950 text-white border-zinc-950 shadow-lg shadow-zinc-950/20"
+                                    ? "bg-brand text-white border-zinc-950 shadow-lg shadow-brand/20"
                                     : "bg-white text-zinc-400 border-zinc-100 hover:border-zinc-200"
                             )}
                         >
@@ -182,7 +182,7 @@ export function GoalForm({ initialData, onSuccess, onCancel }: GoalFormProps) {
                 <button
                     type="submit"
                     disabled={loading}
-                    className="flex-1 h-14 bg-zinc-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-zinc-800 transition-all flex items-center justify-center gap-2 shadow-xl shadow-zinc-950/20 active:scale-95 disabled:opacity-50"
+                    className="flex-1 h-14 bg-brand text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-brand/90 transition-all flex items-center justify-center gap-2 shadow-xl shadow-brand/20 active:scale-95 disabled:opacity-50"
                 >
                     {loading ? <Loader2 className="animate-spin" size={18} /> : initialData ? 'Salvar Alterações' : 'Criar Meta'}
                 </button>
