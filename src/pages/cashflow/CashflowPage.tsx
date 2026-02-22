@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Plus, Filter, Edit2, Copy, Trash2, CheckCircle2, ArrowUpCircle, ArrowDownCircle, Loader2, Search } from 'lucide-react'
 import { supabase } from '../../services/supabase'
+import { useAuth } from '../../hooks/useAuth'
 import { useFilter } from '../../hooks/useFilter'
 import { formatCurrency, cn } from '../../utils/utils'
 import { startOfMonth, endOfMonth } from 'date-fns'
@@ -9,6 +10,7 @@ import { TransactionForm } from '../../components/TransactionForm'
 import { categories } from '../../utils/constants'
 
 export function CashflowPage() {
+    const { user } = useAuth()
     const { monthDate, selectedProfileId } = useFilter()
     const [transactions, setTransactions] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
@@ -22,6 +24,12 @@ export function CashflowPage() {
     const [filterAccount] = useState('all')
 
     const fetchData = useCallback(async () => {
+        if (!user) {
+            setTransactions([])
+            setLoading(false)
+            return
+        }
+
         setLoading(true)
         const start = startOfMonth(monthDate)
         const end = endOfMonth(monthDate)
@@ -29,7 +37,7 @@ export function CashflowPage() {
         let query = supabase
             .from('transactions')
             .select('*, accounts(name)')
-            
+            .eq('user_id', user.id)
             .gte('date', start.toISOString())
             .lte('date', end.toISOString())
 
@@ -41,7 +49,7 @@ export function CashflowPage() {
 
         if (trans) setTransactions(trans)
         setLoading(false)
-    }, [monthDate, selectedProfileId])
+    }, [monthDate, selectedProfileId, user])
 
     useEffect(() => {
         fetchData()
@@ -62,22 +70,25 @@ export function CashflowPage() {
     const balance = income - expense
 
     async function handleDelete(id: string) {
+        if (!user) return
         if (confirm('Tem certeza que deseja excluir este lançamento?')) {
-            await supabase.from('transactions').delete().eq('id', id)
+            await supabase.from('transactions').delete().eq('id', id).eq('user_id', user.id)
             fetchData()
         }
     }
 
     async function toggleStatus(transaction: any) {
+        if (!user) return
         const newStatus = transaction.status === 'paid' ? 'pending' : 'paid'
-        await supabase.from('transactions').update({ status: newStatus }).eq('id', transaction.id)
+        await supabase.from('transactions').update({ status: newStatus }).eq('id', transaction.id).eq('user_id', user.id)
         fetchData()
     }
 
     async function duplicateTransaction(transaction: any) {
+        if (!user) return
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { id, created_at, accounts, ...rest } = transaction
-        await supabase.from('transactions').insert({ ...rest })
+        await supabase.from('transactions').insert({ ...rest, user_id: user.id })
         fetchData()
     }
 

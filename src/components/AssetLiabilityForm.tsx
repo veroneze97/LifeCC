@@ -3,6 +3,7 @@ import { Loader2, ArrowLeft, User, AlertCircle } from 'lucide-react'
 import { format } from 'date-fns'
 
 import { supabase } from '../services/supabase'
+import { useAuth } from '../hooks/useAuth'
 import { useFilter } from '../hooks/useFilter'
 import { cn } from '../utils/utils'
 
@@ -29,6 +30,7 @@ const liabilityTypes = [
 ]
 
 export function AssetLiabilityForm({ type, initialData, onSuccess, onCancel }: AssetLiabilityFormProps) {
+    const { user } = useAuth()
     const { profiles, selectedProfileId } = useFilter()
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -42,6 +44,10 @@ export function AssetLiabilityForm({ type, initialData, onSuccess, onCancel }: A
         setError(null)
 
         try {
+            if (!user) {
+                throw new Error('Usuário não autenticado.')
+            }
+
             const formData = new FormData(e.currentTarget)
             const value = Number(formData.get('value'))
 
@@ -50,7 +56,8 @@ export function AssetLiabilityForm({ type, initialData, onSuccess, onCancel }: A
             }
 
             const payload = {
-                                profile_id: formData.get('profile_id') as string,
+                user_id: user.id,
+                profile_id: formData.get('profile_id') as string,
                 name: formData.get('name') as string,
                 value: value,
                 type: formData.get('type') as any,
@@ -67,7 +74,7 @@ export function AssetLiabilityForm({ type, initialData, onSuccess, onCancel }: A
                     .from(tableName as any)
                     .update(payload)
                     .eq('id', initialData.id)
-                    
+                    .eq('user_id', user.id)
                 submissionError = err
             } else {
                 const { error: err } = await supabase

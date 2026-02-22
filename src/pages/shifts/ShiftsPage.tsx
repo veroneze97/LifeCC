@@ -1,17 +1,25 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Calendar, Loader2, TrendingUp, Trash2, MapPin, Stethoscope, CheckCircle2, Clock } from 'lucide-react'
 import { supabase } from '../../services/supabase'
+import { useAuth } from '../../hooks/useAuth'
 import { useFilter } from '../../hooks/useFilter'
 import { formatCurrency, cn } from '../../utils/utils'
 import { startOfMonth, endOfMonth } from 'date-fns'
 
 export function ShiftsPage() {
+    const { user } = useAuth()
     const { monthDate } = useFilter()
     const [shifts, setShifts] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [filterStatus, setFilterStatus] = useState<'all' | 'paid' | 'pending' | 'cancelled'>('all')
 
     const fetchData = useCallback(async () => {
+        if (!user) {
+            setShifts([])
+            setLoading(false)
+            return
+        }
+
         setLoading(true)
         const start = startOfMonth(monthDate)
         const end = endOfMonth(monthDate)
@@ -19,14 +27,14 @@ export function ShiftsPage() {
         const { data, error } = await supabase
             .from('shifts')
             .select('*')
-            
+            .eq('user_id', user.id)
             .gte('date', start.toISOString())
             .lte('date', end.toISOString())
             .order('date', { ascending: true })
 
         if (!error && data) setShifts(data)
         setLoading(false)
-    }, [monthDate])
+    }, [monthDate, user])
 
     useEffect(() => {
         fetchData()
@@ -42,6 +50,7 @@ export function ShiftsPage() {
     const averagePerShift = filteredShifts.length > 0 ? totalExpected / filteredShifts.length : 0
 
     async function handleMarkAsPaid(shift: any) {
+        if (!user) return
         setLoading(true)
         const { error } = await supabase
             .from('shifts')
@@ -50,15 +59,17 @@ export function ShiftsPage() {
                 value_received: shift.value_expected
             })
             .eq('id', shift.id)
+            .eq('user_id', user.id)
 
         if (!error) fetchData()
         else setLoading(false)
     }
 
     async function handleDelete(id: string) {
+        if (!user) return
         if (confirm('Deseja excluir este plantão?')) {
             setLoading(true)
-            await supabase.from('shifts').delete().eq('id', id)
+            await supabase.from('shifts').delete().eq('id', id).eq('user_id', user.id)
             fetchData()
         }
     }

@@ -3,6 +3,7 @@ import { Loader2, ArrowLeft, AlertCircle } from 'lucide-react'
 import { format } from 'date-fns'
 
 import { supabase } from '../services/supabase'
+import { useAuth } from '../hooks/useAuth'
 import { useFilter } from '../hooks/useFilter'
 import { categories } from '../utils/constants'
 
@@ -13,6 +14,7 @@ interface TransactionFormProps {
 }
 
 export function TransactionForm({ initialData, onSuccess, onCancel }: TransactionFormProps) {
+    const { user } = useAuth()
     const { profiles, selectedProfileId } = useFilter()
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -22,8 +24,12 @@ export function TransactionForm({ initialData, onSuccess, onCancel }: Transactio
         let isMounted = true
 
         async function fetchAccounts() {
+            if (!user) {
+                if (isMounted) setAccounts([])
+                return
+            }
             try {
-                let query = supabase.from('accounts').select('id, name')
+                let query = supabase.from('accounts').select('id, name').eq('user_id', user.id)
                 if (selectedProfileId !== 'all') {
                     query = query.eq('profile_id', selectedProfileId)
                 }
@@ -39,7 +45,7 @@ export function TransactionForm({ initialData, onSuccess, onCancel }: Transactio
         return () => {
             isMounted = false
         }
-    }, [selectedProfileId])
+    }, [selectedProfileId, user])
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
@@ -47,6 +53,10 @@ export function TransactionForm({ initialData, onSuccess, onCancel }: Transactio
         setError(null)
 
         try {
+            if (!user) {
+                throw new Error('Usuário não autenticado.')
+            }
+
             const formData = new FormData(e.currentTarget)
             const amount = Number(formData.get('amount'))
 
@@ -55,7 +65,8 @@ export function TransactionForm({ initialData, onSuccess, onCancel }: Transactio
             }
 
             const payload = {
-                                profile_id: formData.get('profile_id') as string,
+                user_id: user.id,
+                profile_id: formData.get('profile_id') as string,
                 account_id: formData.get('account_id') as string,
                 date: formData.get('date') as string,
                 type: formData.get('type') as 'income' | 'expense',
@@ -72,7 +83,11 @@ export function TransactionForm({ initialData, onSuccess, onCancel }: Transactio
 
             let submissionError
             if (initialData?.id) {
-                const { error: err } = await supabase.from('transactions').update(payload).eq('id', initialData.id)
+                const { error: err } = await supabase
+                    .from('transactions')
+                    .update(payload)
+                    .eq('id', initialData.id)
+                    .eq('user_id', user.id)
                 submissionError = err
             } else {
                 const { error: err } = await supabase.from('transactions').insert(payload)

@@ -3,6 +3,7 @@ import { Loader2, ArrowLeft, Dumbbell, Scale, User, AlertCircle } from 'lucide-r
 import { format } from 'date-fns'
 
 import { supabase } from '../services/supabase'
+import { useAuth } from '../hooks/useAuth'
 import { useFilter } from '../hooks/useFilter'
 
 interface HealthMetricsFormProps {
@@ -12,6 +13,7 @@ interface HealthMetricsFormProps {
 }
 
 export function HealthMetricsForm({ initialData, onSuccess, onCancel }: HealthMetricsFormProps) {
+    const { user } = useAuth()
     const { profiles, selectedProfileId } = useFilter()
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -22,6 +24,10 @@ export function HealthMetricsForm({ initialData, onSuccess, onCancel }: HealthMe
         setError(null)
 
         try {
+            if (!user) {
+                throw new Error('Usuário não autenticado.')
+            }
+
             const formData = new FormData(e.currentTarget)
             const weightVal = formData.get('weight') ? Number(formData.get('weight')) : null
 
@@ -30,7 +36,8 @@ export function HealthMetricsForm({ initialData, onSuccess, onCancel }: HealthMe
             }
 
             const payload = {
-                                profile_id: formData.get('profile_id') as string,
+                user_id: user.id,
+                profile_id: formData.get('profile_id') as string,
                 date: formData.get('date') as string,
                 weight: weightVal,
                 workouts: formData.get('workouts') === 'on' ? 1 : 0,
@@ -47,13 +54,13 @@ export function HealthMetricsForm({ initialData, onSuccess, onCancel }: HealthMe
                     .from('health_metrics')
                     .update(payload)
                     .eq('id', initialData.id)
-                    
+                    .eq('user_id', user.id)
                 submissionError = err
             } else {
                 const { data: existing } = await supabase
                     .from('health_metrics')
                     .select('id')
-                    
+                    .eq('user_id', user.id)
                     .eq('profile_id', payload.profile_id)
                     .eq('date', payload.date)
                     .maybeSingle()
@@ -63,7 +70,7 @@ export function HealthMetricsForm({ initialData, onSuccess, onCancel }: HealthMe
                         .from('health_metrics')
                         .update(payload)
                         .eq('id', existing.id)
-                        
+                        .eq('user_id', user.id)
                     submissionError = err
                 } else {
                     const { error: err } = await supabase

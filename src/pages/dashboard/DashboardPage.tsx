@@ -53,7 +53,14 @@ export function DashboardPage() {
         )
     }
 
-    if (!data) return null
+    if (!data) {
+        return (
+            <div className="h-[60vh] flex flex-col items-center justify-center text-center px-4">
+                <h2 className="text-xl font-bold text-foreground mb-2">Dados indisponiveis</h2>
+                <p className="text-muted text-sm max-w-sm">Nenhum dado foi retornado para este período.</p>
+            </div>
+        )
+    }
 
     const { kpis, history = [], topCategories = [], upcomingReceipts = [] } = data
     const activeProfile = profiles.find((p: any) => p.id === selectedProfileId)

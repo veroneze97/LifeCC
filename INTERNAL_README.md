@@ -43,6 +43,7 @@ Siga sempre esta ordem para manter a legibilidade:
 - **Cálculos**: Sempre use os utilitários centralizados em `/src/utils` para garantir consistência de dados entre o Dashboard e o Relatório.
 - **Performance**: Utilize `useMemo` e `useCallback` em componentes pesados (como o Dashboard) para evitar re-renders desnecessários.
 - **Tratamento de Erros**: Todos os formulários devem ter um estado de erro visível para o usuário e logs silenciosos para o desenvolvedor.
+- **Segurança de dados**: Toda query/CRUD deve respeitar `user_id = auth.uid()` e nunca acessar dados de outro usuário.
 
 ---
 *LifeCC - Standardized & Optimized for Excellence*

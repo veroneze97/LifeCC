@@ -3,6 +3,7 @@ import { Loader2, ArrowLeft, AlertCircle } from 'lucide-react'
 import { format } from 'date-fns'
 
 import { supabase } from '../services/supabase'
+import { useAuth } from '../hooks/useAuth'
 import { useFilter } from '../hooks/useFilter'
 
 interface ShiftFormProps {
@@ -11,6 +12,7 @@ interface ShiftFormProps {
 }
 
 export function ShiftForm({ onSuccess, onCancel }: ShiftFormProps) {
+    const { user } = useAuth()
     const { profiles, selectedProfileId } = useFilter()
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -21,6 +23,10 @@ export function ShiftForm({ onSuccess, onCancel }: ShiftFormProps) {
         setError(null)
 
         try {
+            if (!user) {
+                throw new Error('Usuário não autenticado.')
+            }
+
             const formData = new FormData(e.currentTarget)
             const valueExpected = Number(formData.get('value_expected'))
             const valueReceived = formData.get('value_received') ? Number(formData.get('value_received')) : null
@@ -30,7 +36,8 @@ export function ShiftForm({ onSuccess, onCancel }: ShiftFormProps) {
             }
 
             const payload = {
-                                profile_id: formData.get('profile_id') as string,
+                user_id: user.id,
+                profile_id: formData.get('profile_id') as string,
                 date: formData.get('date') as string,
                 place: formData.get('place') as string,
                 specialty: formData.get('specialty') as string || null,

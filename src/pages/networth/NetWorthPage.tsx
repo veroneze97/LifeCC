@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Plus, Loader2, Wallet, Layers, Trash2, Edit2, Shield, CircleDollarSign, PieChart } from 'lucide-react'
 import { supabase } from '../../services/supabase'
+import { useAuth } from '../../hooks/useAuth'
 import { useFilter } from '../../hooks/useFilter'
 import { formatCurrency, cn } from '../../utils/utils'
 import { startOfMonth, endOfMonth, subMonths, format } from 'date-fns'
@@ -11,6 +12,7 @@ import { GoalForm } from '../../components/GoalForm'
 import { Target } from 'lucide-react'
 
 export function NetWorthPage() {
+    const { user } = useAuth()
     const { monthDate, selectedProfileId } = useFilter()
     const [assets, setAssets] = useState<any[]>([])
     const [liabilities, setLiabilities] = useState<any[]>([])
@@ -22,15 +24,24 @@ export function NetWorthPage() {
     const [editingItem, setEditingItem] = useState<any>(null)
 
     const fetchData = useCallback(async () => {
+        if (!user) {
+            setAssets([])
+            setLiabilities([])
+            setGoals([])
+            setLoading(false)
+            return
+        }
+
         setLoading(true)
         const start = startOfMonth(monthDate)
         const end = endOfMonth(monthDate)
 
         const applyFilter = (query: any) => {
+            let scopedQuery = query.eq('user_id', user.id)
             if (selectedProfileId !== 'all') {
-                return query.eq('profile_id', selectedProfileId)
+                scopedQuery = scopedQuery.eq('profile_id', selectedProfileId)
             }
-            return query
+            return scopedQuery
         }
 
         const [assetsRes, liabilitiesRes, goalsRes] = await Promise.all([
@@ -43,9 +54,14 @@ export function NetWorthPage() {
         if (liabilitiesRes.data) setLiabilities(liabilitiesRes.data)
         if (goalsRes.data) setGoals(goalsRes.data)
         setLoading(false)
-    }, [monthDate, selectedProfileId])
+    }, [monthDate, selectedProfileId, user])
 
     const fetchHistory = useCallback(async () => {
+        if (!user) {
+            setHistory([])
+            return
+        }
+
         const last6Months = Array.from({ length: 6 }).map((_, i) => {
             const d = subMonths(monthDate, i)
             return {
@@ -56,10 +72,11 @@ export function NetWorthPage() {
         }).reverse()
 
         const applyFilter = (query: any) => {
+            let scopedQuery = query.eq('user_id', user.id)
             if (selectedProfileId !== 'all') {
-                return query.eq('profile_id', selectedProfileId)
+                scopedQuery = scopedQuery.eq('profile_id', selectedProfileId)
             }
-            return query
+            return scopedQuery
         }
 
         const historyPromises = last6Months.map(async (period) => {
@@ -79,7 +96,7 @@ export function NetWorthPage() {
 
         const results = await Promise.all(historyPromises)
         setHistory(results)
-    }, [monthDate, selectedProfileId])
+    }, [monthDate, selectedProfileId, user])
 
     useEffect(() => {
         fetchData()
@@ -97,9 +114,10 @@ export function NetWorthPage() {
     const netWorth = totalAssets - totalLiabilities
 
     async function handleDelete(id: string, type: 'asset' | 'liability' | 'goal') {
+        if (!user) return
         if (confirm(`Deseja excluir este ${type === 'goal' ? 'objetivo' : 'item do patrimônio'}?`)) {
             const tableMap: any = { asset: 'assets', liability: 'liabilities', goal: 'goals' }
-            await supabase.from(tableMap[type]).delete().eq('id', id)
+            await supabase.from(tableMap[type]).delete().eq('id', id).eq('user_id', user.id)
             fetchData()
             fetchHistory()
         }
@@ -318,7 +336,9 @@ export function NetWorthPage() {
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                                 {goals.map(goal => {
-                                    const progress = Math.min((netWorth / goal.target_value) * 100, 100)
+                                    const goalTarget = Number(goal.target_value || 0)
+                                    const progressRaw = goalTarget > 0 ? (netWorth / goalTarget) * 100 : 0
+                                    const progress = Number.isFinite(progressRaw) ? Math.max(0, Math.min(progressRaw, 100)) : 0
                                     return (
                                         <div key={goal.id} className="premium-card p-8 group relative overflow-hidden">
                                             <div className="flex justify-between items-start mb-6 pt-2">

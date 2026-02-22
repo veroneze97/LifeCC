@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { startOfMonth, endOfMonth, subMonths, format } from 'date-fns'
 
 import { supabase } from '../services/supabase'
+import { useAuth } from './useAuth'
 import { useFilter } from './useFilter'
 import { calculateNetWorth, calculateMonthBalance, calculateInvestmentRate, calculateTopCategories, calculateProfileParticipation } from '../utils/financialCalculations'
 import { calculateLifeScore } from '../utils/lifeScore'
@@ -18,6 +19,7 @@ type HealthMetric = Database['public']['Tables']['health_metrics']['Row']
 type Goal = Database['public']['Tables']['goals']['Row']
 
 export function useDashboardData() {
+    const { user } = useAuth()
     const { monthDate, selectedProfileId, profiles } = useFilter()
 
     const [rawData, setRawData] = useState<{
@@ -51,6 +53,24 @@ export function useDashboardData() {
 
         async function fetchData() {
             try {
+                if (!user) {
+                    if (isMounted) {
+                        setRawData({
+                            assets: [],
+                            liabilities: [],
+                            transactions: [],
+                            shifts: [],
+                            health: [],
+                            histAssets: [],
+                            histLiabilities: [],
+                            histTransactions: [],
+                            goals: []
+                        })
+                        setLoading(false)
+                    }
+                    return
+                }
+
                 setLoading(true)
                 setError(null)
 
@@ -58,10 +78,11 @@ export function useDashboardData() {
                 const end = endOfMonth(monthDate)
                 const historyStart = startOfMonth(subMonths(monthDate, 5))
                 const applyFilter = (query: any) => {
+                    let scopedQuery = query.eq('user_id', user.id)
                     if (selectedProfileId !== 'all') {
-                        return query.eq('profile_id', selectedProfileId)
+                        scopedQuery = scopedQuery.eq('profile_id', selectedProfileId)
                     }
-                    return query
+                    return scopedQuery
                 }
 
                 const [assetsRes, liabilitiesRes, transactionsRes, shiftsRes, healthRes] = await Promise.all([
@@ -126,7 +147,7 @@ export function useDashboardData() {
         return () => {
             isMounted = false
         }
-    }, [monthDate, selectedProfileId, refreshCounter])
+    }, [monthDate, selectedProfileId, refreshCounter, user])
 
     const data = useMemo<DashboardData | null>(() => {
         if (!rawData) return null

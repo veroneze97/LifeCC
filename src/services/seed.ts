@@ -1,52 +1,50 @@
 import { addDays, startOfMonth } from 'date-fns'
 
+import { getCurrentUserId } from './auth'
+import { ensureUserBootstrap } from './bootstrap'
 import { supabase } from './supabase'
 
-async function getProfileId() {
+async function getUserScope() {
+    const userId = await getCurrentUserId()
     const { data: authData, error: authError } = await supabase.auth.getUser()
-    if (authError || !authData.user) {
+    if (authError || !authData.user || authData.user.id !== userId) {
         throw new Error('Usuário não autenticado para executar seed.')
     }
 
-    const profileId = authData.user.id
-    await supabase.from('profiles').upsert({
-        id: profileId,
-        name: authData.user.user_metadata?.full_name || authData.user.email || 'Usuário',
-        role: 'primary'
-    })
+    const { profileId } = await ensureUserBootstrap(authData.user)
 
-    return profileId
+    return { userId, profileId }
 }
 
 export async function checkIfDatabaseEmpty() {
-    const profileId = await getProfileId()
-    const { count: accountCount } = await supabase.from('accounts').select('*', { count: 'exact', head: true }).eq('profile_id', profileId)
-    const { count: transactionCount } = await supabase.from('transactions').select('*', { count: 'exact', head: true }).eq('profile_id', profileId)
-    const { count: shiftCount } = await supabase.from('shifts').select('*', { count: 'exact', head: true }).eq('profile_id', profileId)
+    const { userId } = await getUserScope()
+    const { count: accountCount } = await supabase.from('accounts').select('*', { count: 'exact', head: true }).eq('user_id', userId)
+    const { count: transactionCount } = await supabase.from('transactions').select('*', { count: 'exact', head: true }).eq('user_id', userId)
+    const { count: shiftCount } = await supabase.from('shifts').select('*', { count: 'exact', head: true }).eq('user_id', userId)
 
     return (accountCount === 0 && transactionCount === 0 && shiftCount === 0)
 }
 
 export async function clearLocalData() {
-    const profileId = await getProfileId()
+    const { userId } = await getUserScope()
     await Promise.all([
-        supabase.from('transactions').delete().eq('profile_id', profileId),
-        supabase.from('accounts').delete().eq('profile_id', profileId),
-        supabase.from('shifts').delete().eq('profile_id', profileId),
-        supabase.from('assets').delete().eq('profile_id', profileId),
-        supabase.from('liabilities').delete().eq('profile_id', profileId),
-        supabase.from('health_metrics').delete().eq('profile_id', profileId),
-        supabase.from('goals').delete().eq('profile_id', profileId)
+        supabase.from('transactions').delete().eq('user_id', userId),
+        supabase.from('accounts').delete().eq('user_id', userId),
+        supabase.from('shifts').delete().eq('user_id', userId),
+        supabase.from('assets').delete().eq('user_id', userId),
+        supabase.from('liabilities').delete().eq('user_id', userId),
+        supabase.from('health_metrics').delete().eq('user_id', userId),
+        supabase.from('goals').delete().eq('user_id', userId)
     ])
 }
 
 export async function seedDatabase() {
-    const profileId = await getProfileId()
+    const { userId, profileId } = await getUserScope()
     const monthStart = startOfMonth(new Date())
 
     const { data: accounts, error: accError } = await supabase.from('accounts').insert([
-        { profile_id: profileId, name: 'Conta Principal', type: 'checking', balance_initial: 5000 },
-        { profile_id: profileId, name: 'Investimentos', type: 'investment', balance_initial: 30000 }
+        { user_id: userId, profile_id: profileId, name: 'Conta Principal', type: 'checking', balance_initial: 5000 },
+        { user_id: userId, profile_id: profileId, name: 'Investimentos', type: 'investment', balance_initial: 30000 }
     ]).select()
 
     if (accError || !accounts) {
@@ -58,6 +56,7 @@ export async function seedDatabase() {
 
     await supabase.from('shifts').insert([
         {
+            user_id: userId,
             profile_id: profileId,
             date: addDays(monthStart, 5).toISOString(),
             place: 'Hospital Central',
@@ -68,25 +67,26 @@ export async function seedDatabase() {
     ])
 
     await supabase.from('transactions').insert([
-        { profile_id: profileId, account_id: mainAccount, date: addDays(monthStart, 2).toISOString(), type: 'expense', category: 'Moradia', description: 'Aluguel', amount: 2500, status: 'paid' },
-        { profile_id: profileId, account_id: mainAccount, date: addDays(monthStart, 5).toISOString(), type: 'income', category: 'Salário', description: 'Salário mensal', amount: 8000, status: 'paid' },
-        { profile_id: profileId, account_id: investAccount, date: addDays(monthStart, 25).toISOString(), type: 'expense', category: 'Investimentos', description: 'Aporte mensal', amount: 2000, status: 'paid' }
+        { user_id: userId, profile_id: profileId, account_id: mainAccount, date: addDays(monthStart, 2).toISOString(), type: 'expense', category: 'Moradia', description: 'Aluguel', amount: 2500, status: 'paid' },
+        { user_id: userId, profile_id: profileId, account_id: mainAccount, date: addDays(monthStart, 5).toISOString(), type: 'income', category: 'Salário', description: 'Salário mensal', amount: 8000, status: 'paid' },
+        { user_id: userId, profile_id: profileId, account_id: investAccount, date: addDays(monthStart, 25).toISOString(), type: 'expense', category: 'Investimentos', description: 'Aporte mensal', amount: 2000, status: 'paid' }
     ])
 
     await supabase.from('assets').insert([
-        { profile_id: profileId, name: 'Reserva de Emergência', type: 'investment', value: 30000, date_reference: monthStart.toISOString() }
+        { user_id: userId, profile_id: profileId, name: 'Reserva de Emergência', type: 'investment', value: 30000, date_reference: monthStart.toISOString() }
     ])
 
     await supabase.from('liabilities').insert([
-        { profile_id: profileId, name: 'Cartão de Crédito', type: 'credit_card', value: 1500, date_reference: monthStart.toISOString() }
+        { user_id: userId, profile_id: profileId, name: 'Cartão de Crédito', type: 'credit_card', value: 1500, date_reference: monthStart.toISOString() }
     ])
 
     await supabase.from('health_metrics').insert([
-        { profile_id: profileId, date: addDays(monthStart, 1).toISOString(), weight: 82, workouts: 1, notes: 'Treino A' }
+        { user_id: userId, profile_id: profileId, date: addDays(monthStart, 1).toISOString(), weight: 82, workouts: 1, notes: 'Treino A' }
     ])
 
     await supabase.from('goals').insert([
         {
+            user_id: userId,
             profile_id: profileId,
             name: 'Reserva de 12 meses',
             target_value: 120000,

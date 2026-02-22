@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
 
+import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../services/supabase'
 import { months } from '../utils/constants'
 import { FilterContext, Profile } from './FilterContextValue'
 
 export function FilterProvider({ children }: { children: React.ReactNode }) {
+    const { user } = useAuth()
     const currentMonthIndex = new Date().getMonth()
     const [selectedMonth, setSelectedMonth] = useState(months[currentMonthIndex])
     const [selectedProfileId, setSelectedProfileId] = useState('all')
@@ -18,12 +20,19 @@ export function FilterProvider({ children }: { children: React.ReactNode }) {
     }, [selectedMonth])
 
     const fetchProfiles = useCallback(async () => {
+        if (!user) {
+            setProfiles([])
+            setSelectedProfileId('all')
+            setLoadingProfiles(false)
+            return
+        }
+
         setLoadingProfiles(true)
         try {
             const { data, error } = await supabase
                 .from('profiles')
                 .select('*')
-                
+                .eq('user_id', user.id)
                 .order('created_at', { ascending: true })
 
             if (error) throw error
@@ -33,15 +42,18 @@ export function FilterProvider({ children }: { children: React.ReactNode }) {
         } finally {
             setLoadingProfiles(false)
         }
-    }, [])
+    }, [user])
 
     useEffect(() => {
         fetchProfiles()
     }, [fetchProfiles])
 
     useEffect(() => {
-        if (profiles.length > 0 && selectedProfileId === 'all') {
+        if (profiles.length > 0 && (selectedProfileId === 'all' || !profiles.some((p) => p.id === selectedProfileId))) {
             setSelectedProfileId(profiles[0].id)
+        }
+        if (profiles.length === 0) {
+            setSelectedProfileId('all')
         }
     }, [profiles, selectedProfileId])
 

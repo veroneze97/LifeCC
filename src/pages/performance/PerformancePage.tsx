@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Plus, Loader2, TrendingUp, TrendingDown, Dumbbell, Scale, Calendar, Trash2, Edit2, Activity, Zap, CheckCircle2 } from 'lucide-react'
 import { supabase } from '../../services/supabase'
+import { useAuth } from '../../hooks/useAuth'
 import { useFilter } from '../../hooks/useFilter'
 import { cn } from '../../utils/utils'
 import { startOfMonth, endOfMonth, getDaysInMonth, isSameDay } from 'date-fns'
@@ -8,6 +9,7 @@ import { Modal } from '../../components/Modal'
 import { HealthMetricsForm } from '../../components/HealthMetricsForm'
 
 export function PerformancePage() {
+    const { user } = useAuth()
     const { monthDate, selectedProfileId } = useFilter()
     const [metrics, setMetrics] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
@@ -15,6 +17,12 @@ export function PerformancePage() {
     const [editingItem, setEditingItem] = useState<any>(null)
 
     const fetchData = useCallback(async () => {
+        if (!user) {
+            setMetrics([])
+            setLoading(false)
+            return
+        }
+
         setLoading(true)
         const start = startOfMonth(monthDate)
         const end = endOfMonth(monthDate)
@@ -22,7 +30,7 @@ export function PerformancePage() {
         let query = supabase
             .from('health_metrics')
             .select('*')
-            
+            .eq('user_id', user.id)
             .gte('date', start.toISOString())
             .lte('date', end.toISOString())
 
@@ -34,7 +42,7 @@ export function PerformancePage() {
 
         if (!error && data) setMetrics(data)
         setLoading(false)
-    }, [monthDate, selectedProfileId])
+    }, [monthDate, selectedProfileId, user])
 
     useEffect(() => {
         fetchData()
@@ -50,8 +58,9 @@ export function PerformancePage() {
     const weightDelta = currentWeight - initialWeight
 
     async function handleDelete(id: string) {
+        if (!user) return
         if (confirm('Deseja excluir este registro de saúde?')) {
-            await supabase.from('health_metrics').delete().eq('id', id)
+            await supabase.from('health_metrics').delete().eq('id', id).eq('user_id', user.id)
             fetchData()
         }
     }

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Target, Calendar, DollarSign, Loader2, User, AlertCircle } from 'lucide-react'
 
 import { supabase } from '../services/supabase'
+import { useAuth } from '../hooks/useAuth'
 import { useFilter } from '../hooks/useFilter'
 import { cn } from '../utils/utils'
 
@@ -12,6 +13,7 @@ interface GoalFormProps {
 }
 
 export function GoalForm({ initialData, onSuccess, onCancel }: GoalFormProps) {
+    const { user } = useAuth()
     const { profiles, selectedProfileId } = useFilter()
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -31,6 +33,10 @@ export function GoalForm({ initialData, onSuccess, onCancel }: GoalFormProps) {
         setError(null)
 
         try {
+            if (!user) {
+                throw new Error('Usuário não autenticado.')
+            }
+
             const targetVal = Number(formData.target_value)
             if (isNaN(targetVal) || targetVal <= 0) {
                 throw new Error('O valor alvo deve ser maior que zero.')
@@ -38,7 +44,8 @@ export function GoalForm({ initialData, onSuccess, onCancel }: GoalFormProps) {
 
             const data = {
                 ...formData,
-                                profile_id: formData.scope === 'joint' ? null : formData.profile_id,
+                user_id: user.id,
+                profile_id: formData.scope === 'joint' ? null : formData.profile_id,
                 target_value: targetVal,
                 monthly_contribution: Number(formData.monthly_contribution || 0),
                 target_date: formData.target_date || null
@@ -50,7 +57,7 @@ export function GoalForm({ initialData, onSuccess, onCancel }: GoalFormProps) {
 
             let submissionError
             if (initialData?.id) {
-                const { error: err } = await supabase.from('goals').update(data).eq('id', initialData.id)
+                const { error: err } = await supabase.from('goals').update(data).eq('id', initialData.id).eq('user_id', user.id)
                 submissionError = err
             } else {
                 const { error: err } = await supabase.from('goals').insert([data])

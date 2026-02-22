@@ -1,12 +1,14 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Database, RefreshCcw, CheckCircle2, AlertCircle, Loader2, Save } from 'lucide-react'
 
 import { seedDatabase, clearLocalData } from '../../services/seed'
+import { useAuth } from '../../hooks/useAuth'
 import { useFilter } from '../../hooks/useFilter'
 import { supabase } from '../../services/supabase'
 import { cn } from '../../utils/utils'
 
 export function SettingsPage() {
+    const { user } = useAuth()
     const { profiles, refreshProfiles } = useFilter()
     const [loading, setLoading] = useState(false)
     const [savingProfile, setSavingProfile] = useState(false)
@@ -14,8 +16,12 @@ export function SettingsPage() {
     const [error, setError] = useState<string | null>(null)
     const [name, setName] = useState(profiles[0]?.name || '')
 
+    useEffect(() => {
+        setName(profiles[0]?.name || '')
+    }, [profiles])
+
     async function handleSaveProfile() {
-        if (!profiles[0]) return
+        if (!profiles[0] || !user) return
         setSavingProfile(true)
         setError(null)
         try {
@@ -23,6 +29,7 @@ export function SettingsPage() {
                 .from('profiles')
                 .update({ name })
                 .eq('id', profiles[0].id)
+                .eq('user_id', user.id)
             if (updateError) throw updateError
             await refreshProfiles()
         } catch (err: any) {
@@ -66,7 +73,7 @@ export function SettingsPage() {
                         </div>
                         <div>
                             <h2 className="text-lg font-black text-zinc-950 tracking-tight">Perfil</h2>
-                            <p className="text-xs text-zinc-500 font-medium">O app usa seu `auth.uid()` como `profile_id`.</p>
+                            <p className="text-xs text-zinc-500 font-medium">Seus perfis ficam isolados por `user_id = auth.uid()`.</p>
                         </div>
                     </div>
 

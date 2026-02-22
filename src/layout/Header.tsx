@@ -1,13 +1,28 @@
-import { Plus, ChevronDown, User, Bell, Search } from 'lucide-react'
+import { Plus, ChevronDown, User, Bell, Search, LogOut } from 'lucide-react'
 import { useState } from 'react'
 import { GlobalAddModal } from '../components/GlobalAddModal'
+import { useAuth } from '../hooks/useAuth'
 import { useFilter } from '../hooks/useFilter'
+import { getDisplayName } from '../services/auth'
 import { months } from '../utils/constants'
 import { ProfileSwitcher } from './ProfileSwitcher'
 
 export function Header() {
     const { selectedMonth, setSelectedMonth } = useFilter()
+    const { user, signOut } = useAuth()
     const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+    const displayName = user ? getDisplayName(user) : 'Usuário'
+    const roleName = user?.email || 'Conta autenticada'
+    const avatarLabel = displayName.charAt(0).toUpperCase()
+
+    async function handleSignOut() {
+        try {
+            await signOut()
+        } catch (error) {
+            console.error('Erro ao sair da conta:', error)
+            alert('Nao foi possivel sair da conta. Tente novamente.')
+        }
+    }
 
     return (
         <header className="h-24 flex items-center justify-between px-6 lg:px-8 2xl:px-10 bg-background/80 backdrop-blur-xl sticky top-0 z-30 border-b border-border">
@@ -55,13 +70,28 @@ export function Header() {
 
                 <div className="flex items-center gap-3 group cursor-pointer ml-2">
                     <div className="text-right hidden sm:block">
-                        <p className="text-sm font-semibold text-foreground leading-none">Eduardo Veroneze</p>
-                        <p className="text-[10px] font-medium text-muted uppercase tracking-widest mt-1">Sócio Diretor</p>
+                        <p className="text-sm font-semibold text-foreground leading-none">{displayName}</p>
+                        <p className="text-[10px] font-medium text-muted uppercase tracking-widest mt-1">{roleName}</p>
                     </div>
                     <div className="w-10 h-10 bg-card border border-border rounded-xl flex items-center justify-center text-muted group-hover:text-foreground transition-all shadow-sm hover:border-brand/30">
-                        <User size={18} strokeWidth={2} />
+                        {avatarLabel || <User size={18} strokeWidth={2} />}
                     </div>
+                    <button
+                        onClick={handleSignOut}
+                        className="hidden sm:flex h-10 px-4 bg-card border border-border rounded-xl text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-zinc-950 hover:border-zinc-300 transition-all items-center gap-2"
+                    >
+                        <LogOut size={14} />
+                        Sair
+                    </button>
                 </div>
+
+                <button
+                    onClick={handleSignOut}
+                    className="sm:hidden p-2.5 text-muted hover:text-foreground bg-card shadow-sm border border-border rounded-xl transition-all hover:border-brand/30"
+                    aria-label="Sair"
+                >
+                    <LogOut size={18} />
+                </button>
             </div>
 
             <GlobalAddModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} />
