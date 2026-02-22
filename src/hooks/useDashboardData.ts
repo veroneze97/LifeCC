@@ -137,7 +137,7 @@ export function useDashboardData() {
         const netWorth = calculateNetWorth(assets, liabilities)
         const { income, balance } = calculateMonthBalance(transactions)
         const totalInvestments = transactions
-            .filter(t => t.type === 'expense' && t.category.toLowerCase().includes('invest'))
+            .filter(t => t.type === 'expense' && (t.category ?? '').toLowerCase().includes('invest'))
             .reduce((acc, t) => acc + Number(t.amount || 0), 0)
         const investmentRate = calculateInvestmentRate(income, totalInvestments)
 

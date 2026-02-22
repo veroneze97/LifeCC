@@ -97,7 +97,7 @@ export function TransactionForm({ initialData, onSuccess, onCancel }: Transactio
                 </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest pl-1">Tipo</label>
                     <select name="type" required defaultValue={initialData?.type || 'expense'} className="w-full bg-zinc-50 border border-zinc-200 rounded-2xl px-4 py-3 text-sm focus:ring-4 focus:ring-black/5 outline-none transition-all">
@@ -111,7 +111,7 @@ export function TransactionForm({ initialData, onSuccess, onCancel }: Transactio
                         {profiles.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
                     </select>
                 </div>
-                <div className="space-y-2 col-span-2">
+                <div className="space-y-2 sm:col-span-2">
                     <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest pl-1">Data</label>
                     <input name="date" type="date" required defaultValue={initialData?.date || format(new Date(), 'yyyy-MM-dd')} className="w-full bg-zinc-50 border border-zinc-200 rounded-2xl px-4 py-3 text-sm focus:ring-4 focus:ring-black/5 outline-none transition-all" />
                 </div>
@@ -125,7 +125,7 @@ export function TransactionForm({ initialData, onSuccess, onCancel }: Transactio
                 </select>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest pl-1">Valor (R$)</label>
                     <input name="amount" type="number" step="0.01" required defaultValue={initialData?.amount} placeholder="0,00" min="0.01" className="w-full bg-zinc-50 border border-zinc-200 rounded-2xl px-4 py-3 text-sm focus:ring-4 focus:ring-black/5 outline-none transition-all font-bold" />

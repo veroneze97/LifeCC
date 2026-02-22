@@ -13,7 +13,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
     return (
         <AnimatePresence>
             {isOpen && (
-                <div className="fixed inset-0 z-[100] flex items-start justify-center p-4 sm:p-12 overflow-y-auto custom-scrollbar">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6">
                     {/* Backdrop Premium */}
                     <motion.div
                         initial={{ opacity: 0 }}
@@ -29,11 +29,11 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 40 }}
                         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                        className="relative w-full max-w-xl bg-white rounded-[3rem] shadow-[0_30px_100px_rgba(0,0,0,0.3)] border border-white/20 overflow-hidden my-auto"
+                        className="relative z-[101] w-full max-w-3xl max-h-[92vh] bg-white rounded-[2rem] sm:rounded-[3rem] shadow-[0_30px_100px_rgba(0,0,0,0.3)] border border-white/20 overflow-hidden flex flex-col"
                     >
-                        <div className="p-10 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/50">
+                        <div className="px-5 py-5 sm:px-8 sm:py-6 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/50 shrink-0">
                             <div>
-                                <h2 className="text-2xl font-black text-zinc-950 tracking-tighter">{title}</h2>
+                                <h2 className="text-xl sm:text-2xl font-black text-zinc-950 tracking-tighter">{title}</h2>
                                 <p className="text-[10px] text-zinc-400 font-black uppercase tracking-[0.2em] mt-1 text-left">Action Required</p>
                             </div>
                             <button
@@ -43,7 +43,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
                                 <X size={24} strokeWidth={2.5} />
                             </button>
                         </div>
-                        <div className="p-10">
+                        <div className="px-5 py-5 sm:px-8 sm:py-8 overflow-y-auto custom-scrollbar">
                             {children}
                         </div>
                     </motion.div>
