@@ -7,15 +7,15 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: '#0F1115',
-        card: '#171A21',
-        foreground: '#F5F7FA',
-        muted: '#9CA3AF',
+        background: '#F6F7FB',
+        card: '#FFFFFF',
+        foreground: '#0F172A',
+        muted: '#64748B',
         positive: '#22C55E',
         negative: '#EF4444',
         brand: '#3B82F6',
         gold: '#EAB308',
-        border: 'rgba(255, 255, 255, 0.04)',
+        border: 'rgba(15, 23, 42, 0.08)',
       },
       borderRadius: {
         xl: '16px',

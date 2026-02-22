@@ -92,8 +92,8 @@ export function ShiftsPage() {
                 </div>
 
                 <div className="premium-card-dark p-8">
-                    <p className="text-white/40 font-black text-[10px] uppercase tracking-[0.2em] mb-4">Ticket Médio / Dia</p>
-                    <h3 className="text-3xl font-black tracking-tighter">{formatCurrency(averagePerShift)}</h3>
+                    <p className="text-zinc-500 font-black text-[10px] uppercase tracking-[0.2em] mb-4">Ticket Médio / Dia</p>
+                    <h3 className="text-3xl font-black text-zinc-950 tracking-tighter">{formatCurrency(averagePerShift)}</h3>
                 </div>
             </div>
 

@@ -109,20 +109,20 @@ export function PerformancePage() {
 
                         <div className="premium-card-dark p-10 group relative overflow-hidden">
                             <div className="relative z-10">
-                                <p className="text-white/40 font-black text-[10px] uppercase tracking-[0.2em] mb-4">Status Corporal</p>
+                                <p className="text-zinc-500 font-black text-[10px] uppercase tracking-[0.2em] mb-4">Status Corporal</p>
                                 <div className="flex items-baseline gap-3 mb-2">
-                                    <h3 className="text-5xl font-black tracking-tighter">{currentWeight.toFixed(1)}kg</h3>
+                                    <h3 className="text-5xl font-black text-zinc-950 tracking-tighter">{currentWeight.toFixed(1)}kg</h3>
                                     <span className={cn(
                                         "text-[10px] font-black flex items-center gap-1 px-3 py-1 rounded-full",
-                                        weightDelta <= 0 ? "bg-emerald-500/20 text-emerald-400" : "bg-rose-500/20 text-rose-400"
+                                        weightDelta <= 0 ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"
                                     )}>
                                         {weightDelta > 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
                                         {Math.abs(weightDelta).toFixed(1)}kg
                                     </span>
                                 </div>
-                                <p className="text-white/40 text-[10px] font-black uppercase tracking-widest">vs início do mês</p>
+                                <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">vs início do mês</p>
                             </div>
-                            <Scale size={100} className="absolute -right-6 -bottom-6 text-white/[0.03] -rotate-12 pointer-events-none group-hover:scale-110 transition-transform duration-700" />
+                            <Scale size={100} className="absolute -right-6 -bottom-6 text-zinc-200/70 -rotate-12 pointer-events-none group-hover:scale-110 transition-transform duration-700" />
                         </div>
                     </div>
 

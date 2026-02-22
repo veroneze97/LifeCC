@@ -121,10 +121,10 @@ export function CashflowPage() {
                 </div>
                 <div className="premium-card-dark p-8 flex items-center justify-between group">
                     <div>
-                        <p className="text-white/40 font-black text-[10px] uppercase tracking-[0.2em] mb-2">Saldo Líquido</p>
-                        <h3 className="text-3xl font-black tracking-tighter">{formatCurrency(balance)}</h3>
+                        <p className="text-zinc-500 font-black text-[10px] uppercase tracking-[0.2em] mb-2">Saldo Líquido</p>
+                        <h3 className="text-3xl font-black text-zinc-950 tracking-tighter">{formatCurrency(balance)}</h3>
                     </div>
-                    <div className="p-4 bg-white/10 rounded-[1.5rem] group-hover:scale-110 transition-transform">
+                    <div className="p-4 bg-zinc-100 text-zinc-700 rounded-[1.5rem] group-hover:scale-110 transition-transform">
                         <CheckCircle2 size={28} />
                     </div>
                 </div>
