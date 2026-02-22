@@ -22,7 +22,7 @@ export function PerformancePage() {
         let query = supabase
             .from('health_metrics')
             .select('*')
-            .eq('user_id', 'local')
+            
             .gte('date', start.toISOString())
             .lte('date', end.toISOString())
 

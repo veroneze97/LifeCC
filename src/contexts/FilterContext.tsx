@@ -1,26 +1,8 @@
-import React, { createContext, useState, useEffect, useMemo, useCallback } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 
 import { supabase } from '../services/supabase'
 import { months } from '../utils/constants'
-
-interface Profile {
-    id: string
-    name: string
-    role: string
-}
-
-interface FilterContextType {
-    selectedMonth: string
-    setSelectedMonth: (month: string) => void
-    monthDate: Date
-    selectedProfileId: string // 'all' or profile UUID
-    setSelectedProfileId: (id: string) => void
-    profiles: Profile[]
-    loadingProfiles: boolean
-    refreshProfiles: () => Promise<void>
-}
-
-export const FilterContext = createContext<FilterContextType | undefined>(undefined)
+import { FilterContext, Profile } from './FilterContextValue'
 
 export function FilterProvider({ children }: { children: React.ReactNode }) {
     const currentMonthIndex = new Date().getMonth()
@@ -41,7 +23,7 @@ export function FilterProvider({ children }: { children: React.ReactNode }) {
             const { data, error } = await supabase
                 .from('profiles')
                 .select('*')
-                .eq('user_id', 'local')
+                
                 .order('created_at', { ascending: true })
 
             if (error) throw error
@@ -56,6 +38,12 @@ export function FilterProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         fetchProfiles()
     }, [fetchProfiles])
+
+    useEffect(() => {
+        if (profiles.length > 0 && selectedProfileId === 'all') {
+            setSelectedProfileId(profiles[0].id)
+        }
+    }, [profiles, selectedProfileId])
 
     const value = useMemo(() => ({
         selectedMonth,
@@ -74,4 +62,3 @@ export function FilterProvider({ children }: { children: React.ReactNode }) {
         </FilterContext.Provider>
     )
 }
-

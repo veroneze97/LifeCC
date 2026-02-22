@@ -38,8 +38,7 @@ export function GoalForm({ initialData, onSuccess, onCancel }: GoalFormProps) {
 
             const data = {
                 ...formData,
-                user_id: 'local',
-                profile_id: formData.scope === 'joint' ? null : formData.profile_id,
+                                profile_id: formData.scope === 'joint' ? null : formData.profile_id,
                 target_value: targetVal,
                 monthly_contribution: Number(formData.monthly_contribution || 0),
                 target_date: formData.target_date || null
@@ -51,7 +50,7 @@ export function GoalForm({ initialData, onSuccess, onCancel }: GoalFormProps) {
 
             let submissionError
             if (initialData?.id) {
-                const { error: err } = await supabase.from('goals').update(data).eq('id', initialData.id).eq('user_id', 'local')
+                const { error: err } = await supabase.from('goals').update(data).eq('id', initialData.id)
                 submissionError = err
             } else {
                 const { error: err } = await supabase.from('goals').insert([data])

@@ -30,8 +30,7 @@ export function HealthMetricsForm({ initialData, onSuccess, onCancel }: HealthMe
             }
 
             const payload = {
-                user_id: 'local',
-                profile_id: formData.get('profile_id') as string,
+                                profile_id: formData.get('profile_id') as string,
                 date: formData.get('date') as string,
                 weight: weightVal,
                 workouts: formData.get('workouts') === 'on' ? 1 : 0,
@@ -48,13 +47,13 @@ export function HealthMetricsForm({ initialData, onSuccess, onCancel }: HealthMe
                     .from('health_metrics')
                     .update(payload)
                     .eq('id', initialData.id)
-                    .eq('user_id', 'local')
+                    
                 submissionError = err
             } else {
                 const { data: existing } = await supabase
                     .from('health_metrics')
                     .select('id')
-                    .eq('user_id', 'local')
+                    
                     .eq('profile_id', payload.profile_id)
                     .eq('date', payload.date)
                     .maybeSingle()
@@ -64,7 +63,7 @@ export function HealthMetricsForm({ initialData, onSuccess, onCancel }: HealthMe
                         .from('health_metrics')
                         .update(payload)
                         .eq('id', existing.id)
-                        .eq('user_id', 'local')
+                        
                     submissionError = err
                 } else {
                     const { error: err } = await supabase

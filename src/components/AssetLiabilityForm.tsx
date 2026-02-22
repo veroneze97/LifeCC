@@ -50,8 +50,7 @@ export function AssetLiabilityForm({ type, initialData, onSuccess, onCancel }: A
             }
 
             const payload = {
-                user_id: 'local',
-                profile_id: formData.get('profile_id') as string,
+                                profile_id: formData.get('profile_id') as string,
                 name: formData.get('name') as string,
                 value: value,
                 type: formData.get('type') as any,
@@ -68,7 +67,7 @@ export function AssetLiabilityForm({ type, initialData, onSuccess, onCancel }: A
                     .from(tableName as any)
                     .update(payload)
                     .eq('id', initialData.id)
-                    .eq('user_id', 'local')
+                    
                 submissionError = err
             } else {
                 const { error: err } = await supabase

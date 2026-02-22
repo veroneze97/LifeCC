@@ -57,8 +57,6 @@ export function useDashboardData() {
                 const start = startOfMonth(monthDate)
                 const end = endOfMonth(monthDate)
                 const historyStart = startOfMonth(subMonths(monthDate, 5))
-                const userId = 'local'
-
                 const applyFilter = (query: any) => {
                     if (selectedProfileId !== 'all') {
                         return query.eq('profile_id', selectedProfileId)
@@ -67,21 +65,21 @@ export function useDashboardData() {
                 }
 
                 const [assetsRes, liabilitiesRes, transactionsRes, shiftsRes, healthRes] = await Promise.all([
-                    applyFilter(supabase.from('assets').select('*').eq('user_id', userId)).gte('date_reference', start.toISOString()).lte('date_reference', end.toISOString()),
-                    applyFilter(supabase.from('liabilities').select('*').eq('user_id', userId)).gte('date_reference', start.toISOString()).lte('date_reference', end.toISOString()),
-                    applyFilter(supabase.from('transactions').select('*').eq('user_id', userId)).gte('date', start.toISOString()).lte('date', end.toISOString()),
-                    applyFilter(supabase.from('shifts').select('*').eq('user_id', userId)),
-                    applyFilter(supabase.from('health_metrics').select('workouts, date, profile_id').eq('user_id', userId)).gte('date', start.toISOString()).lte('date', end.toISOString())
+                    applyFilter(supabase.from('assets').select('*')).gte('date_reference', start.toISOString()).lte('date_reference', end.toISOString()),
+                    applyFilter(supabase.from('liabilities').select('*')).gte('date_reference', start.toISOString()).lte('date_reference', end.toISOString()),
+                    applyFilter(supabase.from('transactions').select('*')).gte('date', start.toISOString()).lte('date', end.toISOString()),
+                    applyFilter(supabase.from('shifts').select('*')),
+                    applyFilter(supabase.from('health_metrics').select('workouts, date, profile_id')).gte('date', start.toISOString()).lte('date', end.toISOString())
                 ])
 
                 const [histAssetsRes, histLiabilitiesRes, histTransactionsRes, goalsRes] = await Promise.all([
-                    applyFilter(supabase.from('assets').select('value, date_reference').eq('user_id', userId))
+                    applyFilter(supabase.from('assets').select('value, date_reference'))
                         .gte('date_reference', historyStart.toISOString()).lte('date_reference', end.toISOString()),
-                    applyFilter(supabase.from('liabilities').select('value, date_reference').eq('user_id', userId))
+                    applyFilter(supabase.from('liabilities').select('value, date_reference'))
                         .gte('date_reference', historyStart.toISOString()).lte('date_reference', end.toISOString()),
-                    applyFilter(supabase.from('transactions').select('amount, date, type').eq('user_id', userId))
+                    applyFilter(supabase.from('transactions').select('amount, date, type'))
                         .gte('date', historyStart.toISOString()).lte('date', end.toISOString()),
-                    applyFilter(supabase.from('goals').select('*').eq('user_id', userId))
+                    applyFilter(supabase.from('goals').select('*'))
                         .eq('scope', selectedProfileId === 'all' ? 'joint' : 'individual')
                         .order('created_at', { ascending: false })
                         .limit(1)

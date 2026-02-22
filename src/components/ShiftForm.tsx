@@ -30,8 +30,7 @@ export function ShiftForm({ onSuccess, onCancel }: ShiftFormProps) {
             }
 
             const payload = {
-                user_id: 'local',
-                profile_id: formData.get('profile_id') as string,
+                                profile_id: formData.get('profile_id') as string,
                 date: formData.get('date') as string,
                 place: formData.get('place') as string,
                 specialty: formData.get('specialty') as string || null,

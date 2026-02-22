@@ -34,9 +34,9 @@ export function NetWorthPage() {
         }
 
         const [assetsRes, liabilitiesRes, goalsRes] = await Promise.all([
-            applyFilter(supabase.from('assets').select('*').eq('user_id', 'local')).gte('date_reference', start.toISOString()).lte('date_reference', end.toISOString()),
-            applyFilter(supabase.from('liabilities').select('*').eq('user_id', 'local')).gte('date_reference', start.toISOString()).lte('date_reference', end.toISOString()),
-            applyFilter(supabase.from('goals').select('*').eq('user_id', 'local')).order('created_at', { ascending: true })
+            applyFilter(supabase.from('assets').select('*')).gte('date_reference', start.toISOString()).lte('date_reference', end.toISOString()),
+            applyFilter(supabase.from('liabilities').select('*')).gte('date_reference', start.toISOString()).lte('date_reference', end.toISOString()),
+            applyFilter(supabase.from('goals').select('*')).order('created_at', { ascending: true })
         ])
 
         if (assetsRes.data) setAssets(assetsRes.data)
@@ -64,8 +64,8 @@ export function NetWorthPage() {
 
         const historyPromises = last6Months.map(async (period) => {
             const [a, l] = await Promise.all([
-                applyFilter(supabase.from('assets').select('value').eq('user_id', 'local')).gte('date_reference', period.start.toISOString()).lte('date_reference', period.end.toISOString()),
-                applyFilter(supabase.from('liabilities').select('value').eq('user_id', 'local')).gte('date_reference', period.start.toISOString()).lte('date_reference', period.end.toISOString())
+                applyFilter(supabase.from('assets').select('value')).gte('date_reference', period.start.toISOString()).lte('date_reference', period.end.toISOString()),
+                applyFilter(supabase.from('liabilities').select('value')).gte('date_reference', period.start.toISOString()).lte('date_reference', period.end.toISOString())
             ])
 
             const totalA = (a.data || []).reduce((sum: number, item: any) => sum + Number(item.value), 0)

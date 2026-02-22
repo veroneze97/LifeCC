@@ -2,29 +2,32 @@ import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const isProd = import.meta.env.PROD
 
-if (!supabaseUrl || supabaseUrl === 'https://iglijiqvjtzupgxkbsji.supabase.co' || !supabaseAnonKey || supabaseAnonKey === 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnbGlqaXF2anR6dXBneGtic2ppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2NTQ3MzQsImV4cCI6MjA4NzIzMDczNH0.H8KqQs_w6DM4QN5GXDvTBWRJEeNnIjDD97-AhDPppEI') {
-    console.warn('Supabase credentials missing or placeholders. App will use local/mock mode.')
+function isPlaceholder(value: string | undefined, placeholders: string[] = []) {
+    return !value || value.trim() === '' || placeholders.includes(value)
 }
 
-function getValidUrl(url: string | undefined): string {
-    if (!url || url === 'sua_url_aqui') return 'https://placeholder.supabase.co'
+const placeholderUrls = [
+    'sua_url_aqui',
+    'https://iglijiqvjtzupgxkbsji.supabase.co',
+]
 
-    let target = url.trim()
-    if (!target.startsWith('http')) {
-        target = `https://${target}`
-    }
+const placeholderKeys = [
+    'sua_chave_anon_aqui',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnbGlqaXF2anR6dXBneGtic2ppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2NTQ3MzQsImV4cCI6MjA4NzIzMDczNH0.H8KqQs_w6DM4QN5GXDvTBWRJEeNnIjDD97-AhDPppEI',
+]
 
-    try {
-        new URL(target)
-        return target
-    } catch {
-        console.error('Invalid Supabase URL:', url)
-        return 'https://placeholder.supabase.co'
+if (isPlaceholder(supabaseUrl, placeholderUrls) || isPlaceholder(supabaseAnonKey, placeholderKeys)) {
+    const message = 'Missing Supabase env vars. Configure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.'
+    if (isProd) {
+        throw new Error(message)
     }
+    console.warn(message)
 }
 
-const finalUrl = getValidUrl(supabaseUrl)
-const finalKey = (supabaseAnonKey && supabaseAnonKey !== 'sua_chave_anon_aqui') ? supabaseAnonKey : 'placeholder'
+if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Supabase client cannot be initialized without VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.')
+}
 
-export const supabase = createClient(finalUrl, finalKey)
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)

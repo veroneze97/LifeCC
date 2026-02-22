@@ -1,0 +1,5 @@
+[33mfd3be98[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Update Supabase URL and anon key validation
+[33mfa31839[m fix: resolve timezone, NaN and React state unmount issues
+[33m841b87b[m feat: Adiciona páginas de relatório, turnos, patrimônio líquido, fluxo de caixa e configurações, refatora a estrutura do layout e introduz novos hooks e componentes de formulário.
+[33me77dda3[m feat: Implementa novas páginas de gestão (plantões, patrimônio, fluxo de caixa, performance), refatora a estrutura de layout e adiciona funcionalidades financeiras e de autenticação.
+[33m75d8fcd[m feat: Configuração inicial do projeto React com Vite, TypeScript, Tailwind CSS, ESLint, estrutura de rotas e páginas base.

@@ -19,7 +19,7 @@ export function ShiftsPage() {
         const { data, error } = await supabase
             .from('shifts')
             .select('*')
-            .eq('user_id', 'local')
+            
             .gte('date', start.toISOString())
             .lte('date', end.toISOString())
             .order('date', { ascending: true })

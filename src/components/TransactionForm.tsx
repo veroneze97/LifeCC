@@ -23,7 +23,7 @@ export function TransactionForm({ initialData, onSuccess, onCancel }: Transactio
 
         async function fetchAccounts() {
             try {
-                let query = supabase.from('accounts').select('id, name').eq('user_id', 'local')
+                let query = supabase.from('accounts').select('id, name')
                 if (selectedProfileId !== 'all') {
                     query = query.eq('profile_id', selectedProfileId)
                 }
@@ -55,8 +55,7 @@ export function TransactionForm({ initialData, onSuccess, onCancel }: Transactio
             }
 
             const payload = {
-                user_id: 'local',
-                profile_id: formData.get('profile_id') as string,
+                                profile_id: formData.get('profile_id') as string,
                 account_id: formData.get('account_id') as string,
                 date: formData.get('date') as string,
                 type: formData.get('type') as 'income' | 'expense',
@@ -73,7 +72,7 @@ export function TransactionForm({ initialData, onSuccess, onCancel }: Transactio
 
             let submissionError
             if (initialData?.id) {
-                const { error: err } = await supabase.from('transactions').update(payload).eq('id', initialData.id).eq('user_id', 'local')
+                const { error: err } = await supabase.from('transactions').update(payload).eq('id', initialData.id)
                 submissionError = err
             } else {
                 const { error: err } = await supabase.from('transactions').insert(payload)

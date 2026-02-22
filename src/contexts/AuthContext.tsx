@@ -1,24 +1,45 @@
-import React, { createContext, useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import type { User } from '@supabase/supabase-js'
 
-interface AuthContextType {
-    user: { id: string; email: string; user_metadata: { full_name: string } } | null
-    loading: boolean
-    signOut: () => Promise<void>
-}
-
-export const AuthContext = createContext<AuthContextType | undefined>(undefined)
+import { supabase } from '../services/supabase'
+import { AuthContext } from './AuthContextValue'
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-    // Versão Single-User: Usuário sempre fixo como "local"
-    const [user] = useState({
-        id: 'local',
-        email: 'user@lifecc.com',
-        user_metadata: { full_name: 'Usuário Local' }
-    })
-    const [loading] = useState(false)
+    const [user, setUser] = useState<User | null>(null)
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        let isMounted = true
+
+        async function loadSession() {
+            const { data, error } = await supabase.auth.getSession()
+            if (error) {
+                console.error('Failed to load session:', error)
+            }
+            if (isMounted) {
+                setUser(data.session?.user ?? null)
+                setLoading(false)
+            }
+        }
+
+        loadSession()
+
+        const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+            setUser(session?.user ?? null)
+            setLoading(false)
+        })
+
+        return () => {
+            isMounted = false
+            listener.subscription.unsubscribe()
+        }
+    }, [])
 
     const signOut = async () => {
-        console.log('Sign out disabled in Single-User mode')
+        const { error } = await supabase.auth.signOut()
+        if (error) {
+            throw error
+        }
     }
 
     return (
@@ -27,4 +48,3 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         </AuthContext.Provider>
     )
 }
-

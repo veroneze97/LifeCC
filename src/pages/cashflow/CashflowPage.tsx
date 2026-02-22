@@ -29,7 +29,7 @@ export function CashflowPage() {
         let query = supabase
             .from('transactions')
             .select('*, accounts(name)')
-            .eq('user_id', 'local')
+            
             .gte('date', start.toISOString())
             .lte('date', end.toISOString())
 
@@ -77,7 +77,7 @@ export function CashflowPage() {
     async function duplicateTransaction(transaction: any) {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { id, created_at, accounts, ...rest } = transaction
-        await supabase.from('transactions').insert({ ...rest, user_id: 'local' })
+        await supabase.from('transactions').insert({ ...rest })
         fetchData()
     }
 
