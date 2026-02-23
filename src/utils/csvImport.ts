@@ -15,6 +15,12 @@ export interface ParsedImportResult {
     delimiter: ',' | ';'
 }
 
+export interface LooseImportRow {
+    date: unknown
+    description: unknown
+    amount: unknown
+}
+
 interface ColumnIndexes {
     dateIndex: number | null
     descriptionIndex: number | null
@@ -101,6 +107,34 @@ export function parseStatementCsv(content: string): ParsedImportResult {
         parsedRows: resultRows.length,
         skippedRows: rowsToProcess.length - resultRows.length,
         delimiter
+    }
+}
+
+export function normalizeImportedRows(rawRows: LooseImportRow[]): Omit<ParsedImportResult, 'delimiter'> {
+    const resultRows: ParsedImportRow[] = []
+
+    for (const row of rawRows) {
+        const dateValue = normalizeDate(normalizeUnknownText(row.date))
+        const descriptionValue = normalizeUnknownText(row.description).trim()
+        const amountValue = normalizeAmount(row.amount)
+
+        if (!dateValue || !descriptionValue || amountValue === null || amountValue === 0) {
+            continue
+        }
+
+        resultRows.push({
+            date: dateValue,
+            description: descriptionValue,
+            amount: Math.abs(amountValue),
+            type: amountValue < 0 ? 'expense' : 'income',
+        })
+    }
+
+    return {
+        rows: resultRows,
+        totalRows: rawRows.length,
+        parsedRows: resultRows.length,
+        skippedRows: rawRows.length - resultRows.length,
     }
 }
 
@@ -261,8 +295,12 @@ function pickAmount(row: string[], columns: ColumnIndexes): number | null {
     return (credit ?? 0) - (debit ?? 0)
 }
 
-function normalizeAmount(raw: string | undefined): number | null {
-    if (!raw) return null
+function normalizeAmount(raw: unknown): number | null {
+    if (raw === null || raw === undefined) return null
+    if (typeof raw === 'number') {
+        return Number.isFinite(raw) ? raw : null
+    }
+    if (typeof raw !== 'string') return null
 
     let value = raw.trim().replace(/\s|\u00A0/g, '')
     if (!value) return null
@@ -301,6 +339,12 @@ function normalizeAmount(raw: string | undefined): number | null {
     if (Number.isNaN(numericValue)) return null
 
     return isNegative ? -Math.abs(numericValue) : numericValue
+}
+
+function normalizeUnknownText(value: unknown): string {
+    if (typeof value === 'string') return value
+    if (value === null || value === undefined) return ''
+    return String(value)
 }
 
 function normalizeDate(raw: string): string | null {

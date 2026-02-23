@@ -6,7 +6,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { useFilter } from '../../hooks/useFilter'
 import { supabase } from '../../services/supabase'
 import { categories } from '../../utils/constants'
-import { ParsedImportResult, ParsedImportRow, parseStatementCsv } from '../../utils/csvImport'
+import { LooseImportRow, ParsedImportRow, normalizeImportedRows, parseStatementCsv } from '../../utils/csvImport'
 import { cn, formatCurrency } from '../../utils/utils'
 
 interface AccountOption {
@@ -38,6 +38,14 @@ interface ImportSummary {
     ignoredDuplicates: number
 }
 
+interface ImportStats {
+    source: 'csv' | 'pdf'
+    totalRows: number
+    parsedRows: number
+    skippedRows: number
+    delimiter?: ',' | ';'
+}
+
 const BATCH_SIZE = 50
 
 export function ImportPage() {
@@ -49,10 +57,11 @@ export function ImportPage() {
     const [selectedAccountId, setSelectedAccountId] = useState('')
 
     const [fileName, setFileName] = useState('')
-    const [parseMeta, setParseMeta] = useState<ParsedImportResult | null>(null)
+    const [importStats, setImportStats] = useState<ImportStats | null>(null)
     const [reviewRows, setReviewRows] = useState<ReviewRow[]>([])
 
-    const [parsing, setParsing] = useState(false)
+    const [parsingCsv, setParsingCsv] = useState(false)
+    const [extractingPdf, setExtractingPdf] = useState(false)
     const [classifying, setClassifying] = useState(false)
     const [classificationProgress, setClassificationProgress] = useState({ done: 0, total: 0 })
 
@@ -77,7 +86,7 @@ export function ImportPage() {
         return reviewRows.filter((row) => row.confidence < 80)
     }, [reviewRows, showReviewOnly])
 
-    const canImport = selectedAccountId !== '' && selectedCount > 0 && !parsing && !classifying && !importing
+    const canImport = selectedAccountId !== '' && selectedCount > 0 && !parsingCsv && !extractingPdf && !classifying && !importing
 
     useEffect(() => {
         let isMounted = true
@@ -140,35 +149,107 @@ export function ImportPage() {
             return
         }
 
-        setParsing(true)
         setFileName(file.name)
 
+        let fileType: 'csv' | 'pdf'
         try {
-            const fileContent = await file.text()
-            const parsed = parseStatementCsv(fileContent)
+            fileType = detectImportFileType(file)
+        } catch {
+            setError('Formato de arquivo nao suportado. Envie um arquivo .csv ou .pdf.')
+            event.target.value = ''
+            return
+        }
 
-            if (parsed.totalRows === 0) {
-                throw new Error('Nao encontramos linhas validas no CSV enviado.')
+        try {
+            let parsedRows: ParsedImportRow[] = []
+
+            if (fileType === 'csv') {
+                setParsingCsv(true)
+                const fileContent = await file.text()
+                const parsed = parseStatementCsv(fileContent)
+
+                if (parsed.totalRows === 0) {
+                    throw new Error('Nao encontramos linhas validas no CSV enviado.')
+                }
+                if (parsed.parsedRows === 0) {
+                    throw new Error('Nao foi possivel identificar colunas de data, descricao e valor neste arquivo.')
+                }
+
+                parsedRows = parsed.rows
+                setImportStats({
+                    source: 'csv',
+                    totalRows: parsed.totalRows,
+                    parsedRows: parsed.parsedRows,
+                    skippedRows: parsed.skippedRows,
+                    delimiter: parsed.delimiter,
+                })
+            } else {
+                setExtractingPdf(true)
+                const pdfRows = await extractRowsFromPdf(file)
+                const normalized = normalizeImportedRows(pdfRows)
+
+                if (normalized.totalRows === 0) {
+                    throw new Error('PDF sem transacoes identificadas.')
+                }
+                if (normalized.parsedRows === 0) {
+                    throw new Error('PDF sem linhas validas para importar.')
+                }
+
+                parsedRows = normalized.rows
+                setImportStats({
+                    source: 'pdf',
+                    totalRows: normalized.totalRows,
+                    parsedRows: normalized.parsedRows,
+                    skippedRows: normalized.skippedRows,
+                })
             }
-            if (parsed.parsedRows === 0) {
-                throw new Error('Nao foi possivel identificar colunas de data, descricao e valor neste arquivo.')
-            }
 
-            setParseMeta(parsed)
-
-            const baseRows = parsed.rows.map((row, index) => createInitialReviewRow(row, index))
+            const baseRows = parsedRows.map((row, index) => createInitialReviewRow(row, index))
             setReviewRows(baseRows)
 
             await classifyRows(baseRows)
         } catch (parseError) {
-            const message = parseError instanceof Error ? parseError.message : 'Falha ao ler o arquivo CSV.'
-            setError(message)
-            setParseMeta(null)
+            const message = parseError instanceof Error ? parseError.message : 'Falha ao processar o arquivo.'
+            if (fileType === 'pdf') {
+                setError('Nao foi possivel processar este PDF. Verifique se o arquivo esta legivel e tente novamente.')
+            } else {
+                setError(message)
+            }
+            setImportStats(null)
             setReviewRows([])
         } finally {
-            setParsing(false)
+            setParsingCsv(false)
+            setExtractingPdf(false)
             event.target.value = ''
         }
+    }
+
+    async function extractRowsFromPdf(file: File): Promise<LooseImportRow[]> {
+        const fileBase64 = await fileToBase64(file)
+
+        const { data, error: invokeError } = await supabase.functions.invoke('parse-bank-pdf', {
+            body: {
+                fileBase64,
+                fileName: file.name,
+                mimeType: file.type || 'application/pdf',
+            },
+        })
+
+        if (invokeError) {
+            throw new Error(invokeError.message || 'Erro ao chamar parse-bank-pdf')
+        }
+
+        const rows = Array.isArray(data)
+            ? data
+            : Array.isArray(data?.rows)
+                ? data.rows
+                : null
+
+        if (!rows) {
+            throw new Error('Resposta invalida da edge function parse-bank-pdf')
+        }
+
+        return rows as LooseImportRow[]
     }
 
     async function classifyRows(baseRows: ReviewRow[]) {
@@ -332,12 +413,14 @@ export function ImportPage() {
 
     function resetImportState() {
         setFileName('')
-        setParseMeta(null)
+        setImportStats(null)
         setReviewRows([])
         setClassificationProgress({ done: 0, total: 0 })
         setShowReviewOnly(false)
         setImportSummary(null)
         setImporting(false)
+        setParsingCsv(false)
+        setExtractingPdf(false)
     }
 
     return (
@@ -352,18 +435,18 @@ export function ImportPage() {
             <div className="premium-card p-8 space-y-6">
                 <div className="flex flex-col lg:flex-row lg:items-end gap-6">
                     <div className="flex-1 space-y-2">
-                        <label className="text-xs font-black uppercase tracking-widest text-zinc-500">Arquivo CSV</label>
+                        <label className="text-xs font-black uppercase tracking-widest text-zinc-500">Arquivo CSV ou PDF</label>
                         <label className="flex items-center justify-between gap-3 border border-zinc-200 bg-zinc-50 rounded-2xl px-4 py-3 cursor-pointer hover:border-zinc-300 transition-colors">
                             <div className="flex items-center gap-3 min-w-0">
                                 <FileSpreadsheet size={18} className="text-zinc-500 shrink-0" />
-                                <span className="text-sm text-zinc-700 truncate">{fileName || 'Selecionar arquivo .csv'}</span>
+                                <span className="text-sm text-zinc-700 truncate">{fileName || 'Selecionar arquivo .csv ou .pdf'}</span>
                             </div>
                             <span className="h-9 px-4 rounded-xl bg-zinc-900 text-white text-[10px] font-black uppercase tracking-[0.18em] flex items-center gap-2 shrink-0">
                                 <Upload size={14} /> Upload
                             </span>
                             <input
                                 type="file"
-                                accept=".csv,text/csv"
+                                accept=".csv,text/csv,.pdf,application/pdf"
                                 className="hidden"
                                 onChange={(changeEvent) => {
                                     void handleFileChange(changeEvent)
@@ -391,10 +474,14 @@ export function ImportPage() {
                     </div>
                 </div>
 
-                {(parsing || classifying) && (
+                {(parsingCsv || extractingPdf || classifying) && (
                     <div className="flex flex-wrap items-center gap-2 text-sm text-zinc-600">
                         <Loader2 size={16} className="animate-spin" />
-                        {parsing ? 'Processando CSV...' : `Classificando com IA... ${classificationProgress.done}/${classificationProgress.total}`}
+                        {extractingPdf
+                            ? 'Extraindo PDF...'
+                            : parsingCsv
+                                ? 'Processando CSV...'
+                                : `Classificando com IA... ${classificationProgress.done}/${classificationProgress.total}`}
                     </div>
                 )}
 
@@ -420,9 +507,14 @@ export function ImportPage() {
                     </div>
                 )}
 
-                {parseMeta && (
+                {importStats && (
                     <div className="text-xs text-zinc-500 font-semibold uppercase tracking-wider">
-                        Delimitador: <span className="text-zinc-900">{parseMeta.delimiter === ';' ? ';' : ','}</span>
+                        Fonte: <span className="text-zinc-900">{importStats.source.toUpperCase()}</span>
+                        {importStats.delimiter ? (
+                            <>
+                                {' | '}Delimitador: <span className="text-zinc-900">{importStats.delimiter === ';' ? ';' : ','}</span>
+                            </>
+                        ) : null}
                         {' | '}Linhas: <span className="text-zinc-900">{reviewRows.length}</span>
                         {' | '}Revisar: <span className="text-zinc-900">{reviewCount}</span>
                         {' | '}Possiveis duplicados: <span className="text-zinc-900">{duplicateCount}</span>
@@ -541,7 +633,7 @@ export function ImportPage() {
                                 <tr>
                                     <td colSpan={8} className="py-10 text-center text-zinc-500">
                                         {reviewRows.length === 0
-                                            ? 'Envie um CSV para iniciar a revisao.'
+                                            ? 'Envie um CSV ou PDF para iniciar a revisao.'
                                             : 'Nenhuma linha encontrada no filtro atual.'}
                                     </td>
                                 </tr>
@@ -672,4 +764,28 @@ function normalizeDescription(value: string): string {
         .replace(/[^a-z0-9\s]/g, ' ')
         .replace(/\s+/g, ' ')
         .trim()
+}
+
+function detectImportFileType(file: File): 'csv' | 'pdf' {
+    const lowerName = file.name.toLowerCase()
+    if (lowerName.endsWith('.csv') || file.type === 'text/csv') return 'csv'
+    if (lowerName.endsWith('.pdf') || file.type === 'application/pdf') return 'pdf'
+    throw new Error('Unsupported file type')
+}
+
+async function fileToBase64(file: File): Promise<string> {
+    return await new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => {
+            const result = typeof reader.result === 'string' ? reader.result : ''
+            const base64 = result.includes(',') ? result.split(',')[1] : result
+            if (!base64) {
+                reject(new Error('Falha ao converter arquivo para base64'))
+                return
+            }
+            resolve(base64)
+        }
+        reader.onerror = () => reject(new Error('Falha ao ler arquivo'))
+        reader.readAsDataURL(file)
+    })
 }
