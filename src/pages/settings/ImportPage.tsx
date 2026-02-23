@@ -211,7 +211,11 @@ export function ImportPage() {
         } catch (parseError) {
             const message = parseError instanceof Error ? parseError.message : 'Falha ao processar o arquivo.'
             if (fileType === 'pdf') {
-                setError('Nao foi possivel processar este PDF. Verifique se o arquivo esta legivel e tente novamente.')
+                setError(
+                    message
+                        ? `Nao foi possivel processar este PDF. ${message}`
+                        : 'Nao foi possivel processar este PDF. Verifique se o arquivo esta legivel e tente novamente.'
+                )
             } else {
                 setError(message)
             }
@@ -244,6 +248,10 @@ export function ImportPage() {
             : Array.isArray(data?.rows)
                 ? data.rows
                 : null
+
+        if (rows && rows.length === 0 && typeof data?.warning === 'string') {
+            throw new Error(data.warning)
+        }
 
         if (!rows) {
             throw new Error('Resposta invalida da edge function parse-bank-pdf')

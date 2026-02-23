@@ -33,6 +33,11 @@ const DATE_HEADER_ALIASES = [
     'data',
     'date',
     'datalancamento',
+    'datamovimento',
+    'dataoperacao',
+    'datatransacao',
+    'datadatransacao',
+    'datahora',
     'lancamento',
     'dtlancamento',
     'transactiondate',
@@ -42,7 +47,13 @@ const DATE_HEADER_ALIASES = [
 const DESCRIPTION_HEADER_ALIASES = [
     'descricao',
     'description',
+    'descricaodatransacao',
+    'historicocompleto',
     'historico',
+    'estabelecimento',
+    'beneficiario',
+    'favorecido',
+    'detalhamento',
     'memo',
     'detalhe',
     'narrative',
@@ -52,6 +63,13 @@ const DESCRIPTION_HEADER_ALIASES = [
 const AMOUNT_HEADER_ALIASES = [
     'valor',
     'amount',
+    'valorfinal',
+    'valorliquido',
+    'valortransacao',
+    'valorlancamento',
+    'valoroperacao',
+    'valordacompra',
+    'vlr',
     'valorrs',
     'quantia',
     'total',
@@ -77,8 +95,7 @@ export function parseStatementCsv(content: string): ParsedImportResult {
         }
     }
 
-    const firstRow = nonEmptyRows[0]
-    const headerAnalysis = detectHeaderAndColumns(firstRow)
+    const headerAnalysis = detectHeaderAndColumns(nonEmptyRows)
     const rowsToProcess = headerAnalysis.hasHeader ? nonEmptyRows.slice(1) : nonEmptyRows
 
     const resultRows: ParsedImportRow[] = []
@@ -209,7 +226,8 @@ function parseCsv(content: string, delimiter: ',' | ';'): string[][] {
     return rows
 }
 
-function detectHeaderAndColumns(firstRow: string[]): { hasHeader: boolean; columns: ColumnIndexes } {
+function detectHeaderAndColumns(rows: string[][]): { hasHeader: boolean; columns: ColumnIndexes } {
+    const firstRow = rows[0] ?? []
     const normalized = firstRow.map(normalizeHeader)
     const columns: ColumnIndexes = {
         dateIndex: findHeaderIndex(normalized, DATE_HEADER_ALIASES),
@@ -226,20 +244,102 @@ function detectHeaderAndColumns(firstRow: string[]): { hasHeader: boolean; colum
         columns.creditIndex !== null ||
         columns.debitIndex !== null
 
+    const sampleRows = hasHeader ? rows.slice(1, 26) : rows.slice(0, 25)
+    const inferredColumns = inferMissingColumns(sampleRows, columns)
+
     if (!hasHeader) {
         return {
             hasHeader: false,
-            columns: {
-                dateIndex: 0,
-                descriptionIndex: 1,
-                amountIndex: 2,
-                creditIndex: null,
-                debitIndex: null,
-            }
+            columns: inferredColumns
         }
     }
 
-    return { hasHeader: true, columns }
+    return { hasHeader: true, columns: inferredColumns }
+}
+
+function inferMissingColumns(rows: string[][], baseColumns: ColumnIndexes): ColumnIndexes {
+    const columns: ColumnIndexes = { ...baseColumns }
+    const maxColumns = Math.max(0, ...rows.map((row) => row.length))
+
+    if (maxColumns === 0) {
+        return {
+            dateIndex: columns.dateIndex ?? 0,
+            descriptionIndex: columns.descriptionIndex ?? 1,
+            amountIndex: columns.amountIndex ?? 2,
+            creditIndex: columns.creditIndex,
+            debitIndex: columns.debitIndex,
+        }
+    }
+
+    if (columns.dateIndex === null) {
+        columns.dateIndex = pickBestIndex(rows, maxColumns, (cell) => normalizeDate(cell) !== null)
+    }
+
+    if (columns.amountIndex === null && columns.creditIndex === null && columns.debitIndex === null) {
+        columns.amountIndex = pickBestIndex(rows, maxColumns, (cell) => normalizeAmount(cell) !== null)
+    }
+
+    if (columns.descriptionIndex === null) {
+        columns.descriptionIndex = inferDescriptionIndex(rows, maxColumns, columns)
+    }
+
+    if (columns.dateIndex === null) columns.dateIndex = 0
+    if (columns.descriptionIndex === null) columns.descriptionIndex = Math.min(1, maxColumns - 1)
+    if (columns.amountIndex === null && columns.creditIndex === null && columns.debitIndex === null) {
+        columns.amountIndex = Math.min(2, maxColumns - 1)
+    }
+
+    return columns
+}
+
+function pickBestIndex(
+    rows: string[][],
+    maxColumns: number,
+    predicate: (cell: string) => boolean
+): number | null {
+    let bestIndex: number | null = null
+    let bestHits = 0
+
+    for (let i = 0; i < maxColumns; i += 1) {
+        let hits = 0
+        for (const row of rows) {
+            const cell = row[i] ?? ''
+            if (predicate(cell)) hits += 1
+        }
+        if (hits > bestHits) {
+            bestHits = hits
+            bestIndex = i
+        }
+    }
+
+    return bestHits > 0 ? bestIndex : null
+}
+
+function inferDescriptionIndex(rows: string[][], maxColumns: number, columns: ColumnIndexes): number | null {
+    let bestIndex: number | null = null
+    let bestScore = -1
+
+    for (let i = 0; i < maxColumns; i += 1) {
+        const isDateColumn = i === (columns.dateIndex ?? -1)
+        const isAmountColumn = i === (columns.amountIndex ?? -1) || i === (columns.creditIndex ?? -1) || i === (columns.debitIndex ?? -1)
+        if (isDateColumn || isAmountColumn) continue
+
+        let score = 0
+        for (const row of rows) {
+            const cell = (row[i] ?? '').trim()
+            if (!cell) continue
+            if (normalizeDate(cell)) continue
+            if (normalizeAmount(cell) !== null) continue
+            score += cell.length >= 3 ? 2 : 1
+        }
+
+        if (score > bestScore) {
+            bestScore = score
+            bestIndex = i
+        }
+    }
+
+    return bestScore > 0 ? bestIndex : null
 }
 
 function findHeaderIndex(headers: string[], aliases: string[]): number | null {
