@@ -7,7 +7,8 @@ import {
     TrendingUp as Activity,
     Calculator,
     ShieldCheck,
-    FileText
+    FileText,
+    FileUp
 } from 'lucide-react'
 import { cn } from '../utils/utils'
 
@@ -18,6 +19,7 @@ const menuItems = [
     { icon: Wallet, label: 'Patrimônio', path: '/networth' },
     { icon: Activity, label: 'Performance', path: '/performance' },
     { icon: FileText, label: 'Relatórios', path: '/report' },
+    { icon: FileUp, label: 'Importar Extrato', path: '/settings/import' },
 ]
 
 interface SidebarProps {

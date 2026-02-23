@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Database, RefreshCcw, CheckCircle2, AlertCircle, Loader2, Save } from 'lucide-react'
+import { Database, RefreshCcw, CheckCircle2, AlertCircle, Loader2, Save, FileUp } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 import { seedDatabase, clearLocalData } from '../../services/seed'
 import { useAuth } from '../../hooks/useAuth'
@@ -127,6 +128,25 @@ export function SettingsPage() {
                         {loading ? 'Processando...' : 'Resetar e Carregar Dados de Exemplo'}
                     </button>
                 </div>
+            </div>
+
+            <div className="premium-card p-10 space-y-5">
+                <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-zinc-900 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-zinc-900/20">
+                        <FileUp size={20} />
+                    </div>
+                    <div>
+                        <h2 className="text-lg font-black text-zinc-950 tracking-tight">Importar Extrato</h2>
+                        <p className="text-xs text-zinc-500 font-medium">Importe CSV e revise os lancamentos antes de salvar.</p>
+                    </div>
+                </div>
+
+                <Link
+                    to="/settings/import"
+                    className="premium-button-primary inline-flex items-center justify-center w-full sm:w-auto px-6"
+                >
+                    Abrir Importador
+                </Link>
             </div>
         </div>
     )

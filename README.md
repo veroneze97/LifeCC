@@ -43,6 +43,63 @@ O app não usa mais fallback de credenciais hardcoded.
 
 Observação: o projeto usa `HashRouter`, mas o callback OAuth deve apontar para a raiz do domínio (sem `#/...`).
 
+## 🤖 Edge Function: classify-transactions
+Função serverless para classificar e limpar descrições de transações usando IA de baixo custo (sem gravar no banco nesta etapa).
+
+Entrada (`POST` JSON):
+
+```json
+{
+  "rows": [
+    {
+      "date": "YYYY-MM-DD",
+      "description": "string",
+      "amount": 123.45,
+      "type": "income"
+    }
+  ],
+  "categories": ["Moradia", "Alimentação", "Outros"]
+}
+```
+
+Saída:
+
+```json
+{
+  "rows": [
+    {
+      "cleanDescription": "string",
+      "category": "Moradia",
+      "confidence": 82
+    }
+  ]
+}
+```
+
+Regras:
+- A categoria retornada sempre é forçada para uma das categorias informadas na requisição.
+- Se a função/LLM ficar incerta, ela usa `Outros` com baixa confiança.
+- Para fallback consistente, inclua `Outros` no array `categories`.
+
+### Variável de ambiente da função
+Defina o segredo no projeto Supabase:
+
+```bash
+supabase secrets set OPENAI_API_KEY=sk-xxxx
+```
+
+### Deploy da Edge Function
+
+```bash
+supabase functions deploy classify-transactions
+```
+
+Opcional (rodar localmente):
+
+```bash
+supabase functions serve classify-transactions --env-file ./supabase/.env.local
+```
+
 ## 🗃️ Banco de Dados e RLS
 - Todas as tabelas de negócio usam `user_id uuid` e isolamento por `auth.uid()`.
 - `profiles` pertence ao usuário autenticado via `profiles.user_id`.

@@ -8,6 +8,7 @@ import { ShiftsPage } from '../pages/shifts/ShiftsPage'
 import { NetWorthPage } from '../pages/networth/NetWorthPage'
 import { PerformancePage } from '../pages/performance/PerformancePage'
 import { SettingsPage } from '../pages/settings/SettingsPage'
+import { ImportPage } from '../pages/settings/ImportPage'
 import { ReportPage } from '../pages/dashboard/ReportPage'
 import { ProtectedRoute } from './ProtectedRoute'
 import { PublicOnlyRoute } from './PublicOnlyRoute'
@@ -46,6 +47,8 @@ export function AppRoutes() {
                 <Route path="/networth" element={<NetWorthPage />} />
                 <Route path="/performance" element={<PerformancePage />} />
                 <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/settings/import" element={<ImportPage />} />
+                <Route path="/import" element={<Navigate to="/settings/import" replace />} />
                 <Route path="/report" element={<ReportPage />} />
             </Route>
 
