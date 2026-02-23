@@ -15,24 +15,39 @@ interface TransactionFormProps {
 
 export function TransactionForm({ initialData, onSuccess, onCancel }: TransactionFormProps) {
     const { user } = useAuth()
-    const { profiles, selectedProfileId } = useFilter()
+    const { profiles, selectedProfileId, loadingProfiles } = useFilter()
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [accounts, setAccounts] = useState<{ id: string; name: string }[]>([])
+    const hasProfiles = profiles.length > 0
+    const defaultProfileId = initialData?.profile_id || (selectedProfileId !== 'all' ? selectedProfileId : (profiles[0]?.id ?? ''))
+    const [formProfileId, setFormProfileId] = useState(defaultProfileId)
+
+    useEffect(() => {
+        const nextDefaultProfileId = initialData?.profile_id || (selectedProfileId !== 'all' ? selectedProfileId : (profiles[0]?.id ?? ''))
+
+        setFormProfileId((currentProfileId: string) => {
+            if (!nextDefaultProfileId) return ''
+            if (currentProfileId && profiles.some((p) => p.id === currentProfileId)) return currentProfileId
+            return nextDefaultProfileId
+        })
+    }, [initialData?.profile_id, selectedProfileId, profiles])
 
     useEffect(() => {
         let isMounted = true
 
         async function fetchAccounts() {
-            if (!user) {
+            if (!user || !formProfileId) {
                 if (isMounted) setAccounts([])
                 return
             }
             try {
-                let query = supabase.from('accounts').select('id, name').eq('user_id', user.id)
-                if (selectedProfileId !== 'all') {
-                    query = query.eq('profile_id', selectedProfileId)
-                }
+                const query = supabase
+                    .from('accounts')
+                    .select('id, name')
+                    .eq('user_id', user.id)
+                    .eq('profile_id', formProfileId)
+
                 const { data, error: err } = await query.order('name')
                 if (err) throw err
                 if (isMounted && data) setAccounts(data)
@@ -45,7 +60,7 @@ export function TransactionForm({ initialData, onSuccess, onCancel }: Transactio
         return () => {
             isMounted = false
         }
-    }, [selectedProfileId, user])
+    }, [formProfileId, user])
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
@@ -55,6 +70,9 @@ export function TransactionForm({ initialData, onSuccess, onCancel }: Transactio
         try {
             if (!user) {
                 throw new Error('Usuário não autenticado.')
+            }
+            if (!hasProfiles) {
+                throw new Error('Nenhum perfil disponível no momento. Aguarde a sincronização e tente novamente.')
             }
 
             const formData = new FormData(e.currentTarget)
@@ -122,7 +140,19 @@ export function TransactionForm({ initialData, onSuccess, onCancel }: Transactio
                 </div>
                 <div className="space-y-2">
                     <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest pl-1">Perfil</label>
-                    <select name="profile_id" required defaultValue={initialData?.profile_id || (selectedProfileId !== 'all' ? selectedProfileId : profiles[0]?.id)} className="w-full bg-zinc-50 border border-zinc-200 rounded-2xl px-4 py-3 text-sm focus:ring-4 focus:ring-black/5 outline-none transition-all">
+                    <select
+                        name="profile_id"
+                        required
+                        disabled={!hasProfiles || loadingProfiles}
+                        value={formProfileId}
+                        onChange={(e) => setFormProfileId(e.target.value)}
+                        className="w-full bg-zinc-50 border border-zinc-200 rounded-2xl px-4 py-3 text-sm focus:ring-4 focus:ring-black/5 outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                        {!hasProfiles && (
+                            <option value="" disabled>
+                                {loadingProfiles ? 'Carregando perfis...' : 'Nenhum perfil disponível'}
+                            </option>
+                        )}
                         {profiles.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
                     </select>
                 </div>
@@ -134,7 +164,13 @@ export function TransactionForm({ initialData, onSuccess, onCancel }: Transactio
 
             <div className="space-y-2">
                 <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest pl-1">Conta</label>
-                <select name="account_id" required defaultValue={initialData?.account_id || ''} className="w-full bg-zinc-50 border border-zinc-200 rounded-2xl px-4 py-3 text-sm focus:ring-4 focus:ring-black/5 outline-none transition-all">
+                <select
+                    key={`account-${formProfileId}-${initialData?.id ?? 'new'}`}
+                    name="account_id"
+                    required
+                    defaultValue={initialData?.profile_id === formProfileId ? (initialData?.account_id || '') : ''}
+                    className="w-full bg-zinc-50 border border-zinc-200 rounded-2xl px-4 py-3 text-sm focus:ring-4 focus:ring-black/5 outline-none transition-all"
+                >
                     <option value="">Selecione uma conta...</option>
                     {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name}</option>)}
                 </select>
@@ -173,10 +209,13 @@ export function TransactionForm({ initialData, onSuccess, onCancel }: Transactio
                         <ArrowLeft size={20} />
                     </button>
                 )}
-                <button disabled={loading} type="submit" className="flex-1 bg-brand text-white font-bold rounded-2xl py-4 hover:bg-brand/90 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+                <button disabled={loading || !hasProfiles || loadingProfiles} type="submit" className="flex-1 bg-brand text-white font-bold rounded-2xl py-4 hover:bg-brand/90 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
                     {loading ? <Loader2 className="animate-spin" size={20} /> : (initialData?.id ? 'Atualizar Lançamento' : 'Salvar Lançamento')}
                 </button>
             </div>
+            {!hasProfiles && (
+                <p className="text-xs text-zinc-500 font-medium">Sem perfil disponível. Aguarde alguns segundos e tente novamente.</p>
+            )}
         </form>
     )
 }

@@ -29,16 +29,32 @@ export function FilterProvider({ children }: { children: React.ReactNode }) {
 
         setLoadingProfiles(true)
         try {
-            const { data, error } = await supabase
+            const queryProfiles = () => supabase
                 .from('profiles')
                 .select('*')
                 .eq('user_id', user.id)
                 .order('created_at', { ascending: true })
 
+            const { data, error } = await queryProfiles()
+
             if (error) throw error
-            if (data) setProfiles(data)
+
+            let nextProfiles = data ?? []
+
+            if (nextProfiles.length === 0) {
+                // Handles the auth/profile bootstrap race on first login.
+                await new Promise((resolve) => setTimeout(resolve, 350))
+
+                const { data: retryData, error: retryError } = await queryProfiles()
+                if (retryError) throw retryError
+
+                nextProfiles = retryData ?? []
+            }
+
+            setProfiles(nextProfiles)
         } catch (err) {
             console.error('Error fetching profiles:', err)
+            setProfiles([])
         } finally {
             setLoadingProfiles(false)
         }
@@ -47,6 +63,22 @@ export function FilterProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         fetchProfiles()
     }, [fetchProfiles])
+
+    useEffect(() => {
+        if (!user) return
+
+        const handleDataChanged = () => {
+            if (profiles.length === 0) {
+                void fetchProfiles()
+            }
+        }
+
+        window.addEventListener('lifecc-data-changed', handleDataChanged)
+
+        return () => {
+            window.removeEventListener('lifecc-data-changed', handleDataChanged)
+        }
+    }, [user, profiles.length, fetchProfiles])
 
     useEffect(() => {
         if (profiles.length > 0 && (selectedProfileId === 'all' || !profiles.some((p) => p.id === selectedProfileId))) {

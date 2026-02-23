@@ -31,12 +31,13 @@ const liabilityTypes = [
 
 export function AssetLiabilityForm({ type, initialData, onSuccess, onCancel }: AssetLiabilityFormProps) {
     const { user } = useAuth()
-    const { profiles, selectedProfileId } = useFilter()
+    const { profiles, selectedProfileId, loadingProfiles } = useFilter()
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [currentType, setCurrentType] = useState<'asset' | 'liability'>(type)
     const options = currentType === 'asset' ? assetTypes : liabilityTypes
     const tableName = currentType === 'asset' ? 'assets' : 'liabilities'
+    const hasProfiles = profiles.length > 0
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
@@ -46,6 +47,9 @@ export function AssetLiabilityForm({ type, initialData, onSuccess, onCancel }: A
         try {
             if (!user) {
                 throw new Error('Usuário não autenticado.')
+            }
+            if (!hasProfiles) {
+                throw new Error('Nenhum perfil disponível no momento. Aguarde a sincronização e tente novamente.')
             }
 
             const formData = new FormData(e.currentTarget)
@@ -184,9 +188,15 @@ export function AssetLiabilityForm({ type, initialData, onSuccess, onCancel }: A
                         <select
                             required
                             name="profile_id"
-                            defaultValue={initialData?.profile_id || (selectedProfileId !== 'all' ? selectedProfileId : profiles[0]?.id)}
-                            className="w-full p-4 pl-12 bg-zinc-50 border border-zinc-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-zinc-950/5 transition-all appearance-none"
+                            disabled={!hasProfiles || loadingProfiles}
+                            defaultValue={initialData?.profile_id || (selectedProfileId !== 'all' ? selectedProfileId : (profiles[0]?.id ?? ''))}
+                            className="w-full p-4 pl-12 bg-zinc-50 border border-zinc-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-zinc-950/5 transition-all appearance-none disabled:opacity-60 disabled:cursor-not-allowed"
                         >
+                            {!hasProfiles && (
+                                <option value="" disabled>
+                                    {loadingProfiles ? 'Carregando perfis...' : 'Nenhum perfil disponível'}
+                                </option>
+                            )}
                             {profiles.map((p: any) => (
                                 <option key={p.id} value={p.id}>{p.name}</option>
                             ))}
@@ -202,13 +212,16 @@ export function AssetLiabilityForm({ type, initialData, onSuccess, onCancel }: A
                     </button>
                 )}
                 <button
-                    disabled={loading}
+                    disabled={loading || !hasProfiles || loadingProfiles}
                     type="submit"
-                    className="flex-1 bg-brand text-white font-bold rounded-2xl py-4 hover:bg-brand/90 transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-xl shadow-brand/20"
+                    className="flex-1 bg-brand text-white font-bold rounded-2xl py-4 hover:bg-brand/90 transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-xl shadow-brand/20 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                     {loading ? <Loader2 className="animate-spin" size={20} /> : (initialData?.id ? 'Atualizar' : 'Adicionar')}
                 </button>
             </div>
+            {!hasProfiles && (
+                <p className="text-xs text-zinc-500 font-medium">Sem perfil disponível. Aguarde alguns segundos e tente novamente.</p>
+            )}
         </form>
     )
 }

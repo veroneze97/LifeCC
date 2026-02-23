@@ -8,10 +8,11 @@ import { startOfMonth, endOfMonth } from 'date-fns'
 
 export function ShiftsPage() {
     const { user } = useAuth()
-    const { monthDate } = useFilter()
+    const { monthDate, selectedProfileId } = useFilter()
     const [shifts, setShifts] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
-    const [filterStatus, setFilterStatus] = useState<'all' | 'paid' | 'pending' | 'cancelled'>('all')
+    const [filterStatus, setFilterStatus] = useState<'all' | 'scheduled' | 'done' | 'invoiced' | 'paid'>('all')
+    const statusOptions: Array<'all' | 'scheduled' | 'done' | 'invoiced' | 'paid'> = ['all', 'scheduled', 'done', 'invoiced', 'paid']
 
     const fetchData = useCallback(async () => {
         if (!user) {
@@ -24,17 +25,22 @@ export function ShiftsPage() {
         const start = startOfMonth(monthDate)
         const end = endOfMonth(monthDate)
 
-        const { data, error } = await supabase
+        let query = supabase
             .from('shifts')
             .select('*')
             .eq('user_id', user.id)
             .gte('date', start.toISOString())
             .lte('date', end.toISOString())
-            .order('date', { ascending: true })
+
+        if (selectedProfileId !== 'all') {
+            query = query.eq('profile_id', selectedProfileId)
+        }
+
+        const { data, error } = await query.order('date', { ascending: true })
 
         if (!error && data) setShifts(data)
         setLoading(false)
-    }, [monthDate, user])
+    }, [monthDate, selectedProfileId, user])
 
     useEffect(() => {
         fetchData()
@@ -46,7 +52,7 @@ export function ShiftsPage() {
 
     const totalExpected = filteredShifts.reduce((acc, s) => acc + Number(s.value_expected), 0)
     const totalReceived = filteredShifts.filter(s => s.status === 'paid').reduce((acc, s) => acc + Number(s.value_received || s.value_expected), 0)
-    const pendingValue = filteredShifts.filter(s => s.status === 'pending').reduce((acc, s) => acc + Number(s.value_expected), 0)
+    const pendingValue = filteredShifts.filter(s => s.status !== 'paid').reduce((acc, s) => acc + Number(s.value_expected), 0)
     const averagePerShift = filteredShifts.length > 0 ? totalExpected / filteredShifts.length : 0
 
     async function handleMarkAsPaid(shift: any) {
@@ -110,10 +116,10 @@ export function ShiftsPage() {
 
             {/* Filter Pill Navigation */}
             <div className="flex bg-zinc-100 p-1.5 rounded-[2rem] w-fit border border-zinc-200/20 shadow-inner">
-                {['all', 'pending', 'paid', 'cancelled'].map((status) => (
+                {statusOptions.map((status) => (
                     <button
                         key={status}
-                        onClick={() => setFilterStatus(status as any)}
+                        onClick={() => setFilterStatus(status)}
                         className={cn(
                             "px-8 py-3 text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all duration-300",
                             filterStatus === status
@@ -121,7 +127,7 @@ export function ShiftsPage() {
                                 : "text-zinc-400 hover:text-zinc-600 hover:bg-white/50"
                         )}
                     >
-                        {status === 'all' ? 'Consolidado' : status === 'paid' ? 'Pago' : status === 'pending' ? 'Pendente' : 'Cancelado'}
+                        {status === 'all' ? 'Consolidado' : status === 'paid' ? 'Pago' : status === 'scheduled' ? 'Agendado' : status === 'done' ? 'Realizado' : 'Faturado'}
                     </button>
                 ))}
             </div>
@@ -181,7 +187,7 @@ export function ShiftsPage() {
                                     </div>
 
                                     <div className="flex items-center gap-2">
-                                        {shift.status === 'pending' && (
+                                        {shift.status !== 'paid' && (
                                             <button
                                                 onClick={() => handleMarkAsPaid(shift)}
                                                 className="px-6 py-3 bg-brand text-white rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-brand/90 transition-all active:scale-95 shadow-lg shadow-brand/20"

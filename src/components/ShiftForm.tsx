@@ -13,9 +13,10 @@ interface ShiftFormProps {
 
 export function ShiftForm({ onSuccess, onCancel }: ShiftFormProps) {
     const { user } = useAuth()
-    const { profiles, selectedProfileId } = useFilter()
+    const { profiles, selectedProfileId, loadingProfiles } = useFilter()
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const hasProfiles = profiles.length > 0
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
@@ -25,6 +26,9 @@ export function ShiftForm({ onSuccess, onCancel }: ShiftFormProps) {
         try {
             if (!user) {
                 throw new Error('Usuário não autenticado.')
+            }
+            if (!hasProfiles) {
+                throw new Error('Nenhum perfil disponível no momento. Aguarde a sincronização e tente novamente.')
             }
 
             const formData = new FormData(e.currentTarget)
@@ -80,9 +84,15 @@ export function ShiftForm({ onSuccess, onCancel }: ShiftFormProps) {
                     <select
                         name="profile_id"
                         required
-                        defaultValue={selectedProfileId !== 'all' ? selectedProfileId : profiles[0]?.id}
-                        className="w-full bg-zinc-50 border border-zinc-200 rounded-2xl px-4 py-3 text-sm focus:ring-4 focus:ring-black/5 outline-none transition-all"
+                        disabled={!hasProfiles || loadingProfiles}
+                        defaultValue={selectedProfileId !== 'all' ? selectedProfileId : (profiles[0]?.id ?? '')}
+                        className="w-full bg-zinc-50 border border-zinc-200 rounded-2xl px-4 py-3 text-sm focus:ring-4 focus:ring-black/5 outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                     >
+                        {!hasProfiles && (
+                            <option value="" disabled>
+                                {loadingProfiles ? 'Carregando perfis...' : 'Nenhum perfil disponível'}
+                            </option>
+                        )}
                         {profiles.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
                     </select>
                 </div>
@@ -122,10 +132,13 @@ export function ShiftForm({ onSuccess, onCancel }: ShiftFormProps) {
                 <button type="button" onClick={onCancel} className="p-4 bg-zinc-100 rounded-2xl text-zinc-600 hover:bg-zinc-200 transition-all">
                     <ArrowLeft size={20} />
                 </button>
-                <button disabled={loading} type="submit" className="flex-1 bg-brand text-white font-bold rounded-2xl py-4 hover:bg-brand/90 transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-xl shadow-brand/20">
+                <button disabled={loading || !hasProfiles || loadingProfiles} type="submit" className="flex-1 bg-brand text-white font-bold rounded-2xl py-4 hover:bg-brand/90 transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-xl shadow-brand/20 disabled:opacity-60 disabled:cursor-not-allowed">
                     {loading ? <Loader2 className="animate-spin" size={20} /> : 'Salvar Plantão'}
                 </button>
             </div>
+            {!hasProfiles && (
+                <p className="text-xs text-zinc-500 font-medium">Sem perfil disponível. Aguarde alguns segundos e tente novamente.</p>
+            )}
         </form>
     )
 }

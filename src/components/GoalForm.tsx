@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Target, Calendar, DollarSign, Loader2, User, AlertCircle } from 'lucide-react'
 
 import { supabase } from '../services/supabase'
@@ -14,11 +14,12 @@ interface GoalFormProps {
 
 export function GoalForm({ initialData, onSuccess, onCancel }: GoalFormProps) {
     const { user } = useAuth()
-    const { profiles, selectedProfileId } = useFilter()
+    const { profiles, selectedProfileId, loadingProfiles } = useFilter()
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const hasProfiles = profiles.length > 0
     const [formData, setFormData] = useState({
-        profile_id: initialData?.profile_id || (selectedProfileId !== 'all' ? selectedProfileId : profiles[0]?.id),
+        profile_id: initialData?.profile_id || (selectedProfileId !== 'all' ? selectedProfileId : (profiles[0]?.id ?? '')),
         name: initialData?.name || '',
         target_value: initialData?.target_value || '',
         target_date: initialData?.target_date || '',
@@ -26,6 +27,19 @@ export function GoalForm({ initialData, onSuccess, onCancel }: GoalFormProps) {
         expected_return_rate: initialData?.expected_return_rate || 0,
         scope: initialData?.scope || 'individual'
     })
+
+    useEffect(() => {
+        if (!hasProfiles) return
+
+        const nextDefaultProfileId = initialData?.profile_id || (selectedProfileId !== 'all' ? selectedProfileId : profiles[0].id)
+        if (!nextDefaultProfileId) return
+
+        setFormData((prev) => {
+            if (prev.scope !== 'individual') return prev
+            if (prev.profile_id && profiles.some((p) => p.id === prev.profile_id)) return prev
+            return { ...prev, profile_id: nextDefaultProfileId }
+        })
+    }, [hasProfiles, initialData?.profile_id, selectedProfileId, profiles])
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault()
@@ -35,6 +49,9 @@ export function GoalForm({ initialData, onSuccess, onCancel }: GoalFormProps) {
         try {
             if (!user) {
                 throw new Error('Usuário não autenticado.')
+            }
+            if (formData.scope === 'individual' && !hasProfiles) {
+                throw new Error('Nenhum perfil disponível no momento. Aguarde a sincronização e tente novamente.')
             }
 
             const targetVal = Number(formData.target_value)
@@ -53,6 +70,9 @@ export function GoalForm({ initialData, onSuccess, onCancel }: GoalFormProps) {
 
             if (!data.name) {
                 throw new Error('O nome da meta é obrigatório.')
+            }
+            if (data.scope === 'individual' && !data.profile_id) {
+                throw new Error('Selecione um perfil para metas individuais.')
             }
 
             let submissionError
@@ -165,10 +185,16 @@ export function GoalForm({ initialData, onSuccess, onCancel }: GoalFormProps) {
                             <User className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
                             <select
                                 required
+                                disabled={!hasProfiles || loadingProfiles}
                                 className="premium-input pl-12 appearance-none"
                                 value={formData.profile_id}
                                 onChange={e => setFormData({ ...formData, profile_id: e.target.value })}
                             >
+                                {!hasProfiles && (
+                                    <option value="" disabled>
+                                        {loadingProfiles ? 'Carregando perfis...' : 'Nenhum perfil disponível'}
+                                    </option>
+                                )}
                                 {profiles.map(p => (
                                     <option key={p.id} value={p.id}>{p.name}</option>
                                 ))}
@@ -188,12 +214,15 @@ export function GoalForm({ initialData, onSuccess, onCancel }: GoalFormProps) {
                 </button>
                 <button
                     type="submit"
-                    disabled={loading}
+                    disabled={loading || (formData.scope === 'individual' && (!hasProfiles || loadingProfiles))}
                     className="flex-1 h-14 bg-brand text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-brand/90 transition-all flex items-center justify-center gap-2 shadow-xl shadow-brand/20 active:scale-95 disabled:opacity-50"
                 >
                     {loading ? <Loader2 className="animate-spin" size={18} /> : initialData ? 'Salvar Alterações' : 'Criar Meta'}
                 </button>
             </div>
+            {formData.scope === 'individual' && !hasProfiles && (
+                <p className="text-xs text-zinc-500 font-medium">Sem perfil disponível. Aguarde alguns segundos e tente novamente.</p>
+            )}
         </form>
     )
 }

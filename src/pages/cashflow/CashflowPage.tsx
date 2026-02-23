@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react'
-import { Plus, Filter, Edit2, Copy, Trash2, CheckCircle2, ArrowUpCircle, ArrowDownCircle, Loader2, Search } from 'lucide-react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import { Plus, Filter, Edit2, Copy, Trash2, CheckCircle2, ArrowUpCircle, ArrowDownCircle, Loader2, Search, ArrowRightLeft } from 'lucide-react'
 import { supabase } from '../../services/supabase'
 import { useAuth } from '../../hooks/useAuth'
 import { useFilter } from '../../hooks/useFilter'
@@ -21,7 +21,8 @@ export function CashflowPage() {
     const [filterType, setFilterType] = useState('all')
     const [filterStatus, setFilterStatus] = useState('all')
     const [filterCategory, setFilterCategory] = useState('all')
-    const [filterAccount] = useState('all')
+    const [filterAccount, setFilterAccount] = useState('all')
+    const [searchTerm, setSearchTerm] = useState('')
 
     const fetchData = useCallback(async () => {
         if (!user) {
@@ -57,11 +58,26 @@ export function CashflowPage() {
         return () => window.removeEventListener('lifecc-data-changed', fetchData)
     }, [fetchData])
 
+    const accountOptions = useMemo(() => {
+        const map = new Map<string, string>()
+        for (const transaction of transactions) {
+            if (!transaction.account_id) continue
+            map.set(transaction.account_id, transaction.accounts?.name || 'Conta sem nome')
+        }
+        return Array.from(map.entries())
+            .map(([id, name]) => ({ id, name }))
+            .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
+    }, [transactions])
+
     const filteredTransactions = transactions.filter(t => {
         if (filterType !== 'all' && t.type !== filterType) return false
         if (filterStatus !== 'all' && t.status !== filterStatus) return false
         if (filterCategory !== 'all' && t.category !== filterCategory) return false
         if (filterAccount !== 'all' && t.account_id !== filterAccount) return false
+        if (searchTerm.trim()) {
+            const haystack = `${t.description || ''} ${t.category || ''} ${t.accounts?.name || ''}`.toLowerCase()
+            if (!haystack.includes(searchTerm.trim().toLowerCase())) return false
+        }
         return true
     })
 
@@ -179,10 +195,23 @@ export function CashflowPage() {
                     </select>
                 </div>
 
+                <div className="flex items-center gap-3 px-6 py-3 bg-white rounded-2xl border border-zinc-100 shadow-sm">
+                    <select
+                        value={filterAccount}
+                        onChange={e => setFilterAccount(e.target.value)}
+                        className="bg-transparent border-none text-[10px] font-black uppercase tracking-widest text-zinc-950 focus:ring-0 cursor-pointer"
+                    >
+                        <option value="all">Conta / Todas</option>
+                        {accountOptions.map(acc => <option key={acc.id} value={acc.id}>{acc.name}</option>)}
+                    </select>
+                </div>
+
                 <div className="flex-1 md:max-w-xs relative group">
                     <input
                         type="text"
                         placeholder="Pesquisar transação..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full bg-white border border-zinc-100 rounded-2xl px-12 py-3 text-xs font-medium focus:ring-4 focus:ring-zinc-950/5 transition-all outline-none"
                     />
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-300 group-focus-within:text-zinc-950 transition-colors" size={16} />
@@ -286,5 +315,3 @@ export function CashflowPage() {
         </div>
     )
 }
-
-import { ArrowRightLeft } from 'lucide-react'
